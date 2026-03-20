@@ -9,6 +9,7 @@ import { SchoolsModule } from './operational/schools/schools.module';
 import { StudentsModule } from './operational/students/students.module';
 import { DriversModule } from './operational/drivers/drivers.module';
 import { VehiclesModule } from './operational/vehicles/vehicles.module';
+import { RoutesModule } from './operational/routes/routes.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { VehiclesModule } from './operational/vehicles/vehicles.module';
     StudentsModule,
     DriversModule,
     VehiclesModule,
+    RoutesModule,
   ],
 })
 export class AppModule {
