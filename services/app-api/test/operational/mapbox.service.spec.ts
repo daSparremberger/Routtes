@@ -1,7 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { of } from 'rxjs';
+import { BadGatewayException } from '@nestjs/common';
+import { of, throwError } from 'rxjs';
 import { MapboxService } from '../../src/operational/routes/mapbox/mapbox.service';
 
 describe('MapboxService', () => {
@@ -53,7 +54,7 @@ describe('MapboxService', () => {
 
   it('should throw when Mapbox API fails', async () => {
     (http.get as jest.Mock).mockReturnValue(
-      new (require('rxjs').throwError)(() => new Error('Mapbox unavailable')),
+      throwError(() => new Error('Mapbox unavailable')),
     );
 
     const stops = [
@@ -61,6 +62,6 @@ describe('MapboxService', () => {
       { lat: -23.6, lng: -46.7 },
     ];
 
-    await expect(service.optimizeRoute(stops, 'time')).rejects.toThrow();
+    await expect(service.optimizeRoute(stops, 'time')).rejects.toThrow(BadGatewayException);
   });
 });
