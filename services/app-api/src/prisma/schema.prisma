@@ -1,0 +1,467 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../generated/prisma"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["app"]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model attendance {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id    String     @db.Uuid
+  student_id   String     @db.Uuid
+  route_id     String     @db.Uuid
+  service_date DateTime   @db.Date
+  direction    String     @db.VarChar(8)
+  decision     attend_dec @default(no_response)
+  source       attend_src
+  override_by  String?    @db.Uuid
+  created_at   DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime   @default(now()) @db.Timestamptz(6)
+  users        users?     @relation(fields: [override_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  routes       routes     @relation(fields: [route_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students     students   @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([student_id, route_id, service_date, direction], map: "attendance_unique")
+  @@index([tenant_id, route_id, service_date], map: "attendance_tenant_route_date_idx")
+  @@schema("app")
+}
+
+model audit_logs {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id     String?  @db.Uuid
+  actor_id      String   @db.Uuid
+  action        String   @db.VarChar(128)
+  resource_type String   @db.VarChar(64)
+  resource_id   String?  @db.Uuid
+  metadata      Json?
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([tenant_id, resource_type, resource_id], map: "app_audit_logs_tenant_idx")
+  @@schema("app")
+}
+
+model driver_profiles {
+  user_id      String   @id @db.Uuid
+  cnh          String   @db.VarChar(32)
+  cnh_validity DateTime @db.Date
+  cnh_category String   @db.VarChar(4)
+  users        users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("app")
+}
+
+model execution_stops {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  execution_id     String           @db.Uuid
+  route_stop_id    String           @db.Uuid
+  order            Int
+  status           stop_status      @default(pending)
+  recorded_at      DateTime?        @db.Timestamptz(6)
+  route_executions route_executions @relation(fields: [execution_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  route_stops      route_stops      @relation(fields: [route_stop_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([execution_id, order], map: "exec_stops_execution_order_idx")
+  @@schema("app")
+}
+
+model invite_tokens {
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id  String      @db.Uuid
+  token      String      @unique @db.VarChar(128)
+  role       invite_role @default(driver)
+  email      String?     @db.VarChar(255)
+  expires_at DateTime    @db.Timestamptz(6)
+  used_at    DateTime?   @db.Timestamptz(6)
+  created_by String      @db.Uuid
+  created_at DateTime    @default(now()) @db.Timestamptz(6)
+  users      users       @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("app")
+}
+
+model messages {
+  id                                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id                          String    @db.Uuid
+  from_user_id                       String    @db.Uuid
+  to_user_id                         String    @db.Uuid
+  content                            String
+  read_at                            DateTime? @db.Timestamptz(6)
+  created_at                         DateTime  @default(now()) @db.Timestamptz(6)
+  users_messages_from_user_idTousers users     @relation("messages_from_user_idTousers", fields: [from_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_messages_to_user_idTousers   users     @relation("messages_to_user_idTousers", fields: [to_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([tenant_id, from_user_id, to_user_id], map: "messages_tenant_from_to_idx")
+  @@index([tenant_id, to_user_id, read_at], map: "messages_tenant_to_read_idx")
+  @@schema("app")
+}
+
+model notifications {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id      String   @db.Uuid
+  user_id        String   @db.Uuid
+  type           String   @db.VarChar(64)
+  payload        Json
+  sent_at        DateTime @default(now()) @db.Timestamptz(6)
+  fcm_message_id String?  @db.VarChar(255)
+  users          users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("app")
+}
+
+model outbox_events {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  aggregate_type String   @db.VarChar(64)
+  aggregate_id   String   @db.Uuid
+  event_type     String   @db.VarChar(128)
+  payload        Json
+  published      Boolean  @default(false)
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  @@schema("app")
+}
+
+model route_events {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  execution_id     String           @db.Uuid
+  type             event_type
+  description      String?
+  lat              Decimal?         @db.Decimal(10, 7)
+  lng              Decimal?         @db.Decimal(10, 7)
+  recorded_at      DateTime         @default(now()) @db.Timestamptz(6)
+  route_executions route_executions @relation(fields: [execution_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("app")
+}
+
+model route_executions {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id       String            @db.Uuid
+  route_id        String            @db.Uuid
+  driver_id       String            @db.Uuid
+  vehicle_id      String            @db.Uuid
+  service_date    DateTime          @db.Date
+  status          exec_status       @default(prepared)
+  started_at      DateTime?         @db.Timestamptz(6)
+  finished_at     DateTime?         @db.Timestamptz(6)
+  total_km        Decimal?          @db.Decimal(8, 2)
+  created_at      DateTime          @default(now()) @db.Timestamptz(6)
+  execution_stops execution_stops[]
+  route_events    route_events[]
+  users           users             @relation(fields: [driver_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  routes          routes            @relation(fields: [route_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vehicles        vehicles          @relation(fields: [vehicle_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([driver_id, service_date], map: "executions_driver_date_idx")
+  @@index([route_id, service_date], map: "executions_route_date_idx")
+  @@index([tenant_id, service_date], map: "executions_tenant_date_idx")
+  @@schema("app")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model route_optimizations {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  route_id           String   @db.Uuid
+  optimized_by       String   @db.Uuid
+  criteria           String   @db.VarChar(16)
+  stops_order_before Json
+  stops_order_after  Json
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  users              users    @relation(fields: [optimized_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  routes             routes   @relation(fields: [route_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("app")
+}
+
+model route_stops {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  route_id        String            @db.Uuid
+  order           Int
+  student_id      String?           @db.Uuid
+  school_id       String?           @db.Uuid
+  lat             Decimal?          @db.Decimal(10, 7)
+  lng             Decimal?          @db.Decimal(10, 7)
+  stop_type       stop_type
+  execution_stops execution_stops[]
+  routes          routes            @relation(fields: [route_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  schools         schools?          @relation(fields: [school_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students        students?         @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([route_id, order], map: "route_stops_route_order_idx")
+  @@schema("app")
+}
+
+model routes {
+  id                              String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id                       String                @db.Uuid
+  name                            String                @db.VarChar(255)
+  shift                           shift_type
+  driver_id                       String?               @db.Uuid
+  vehicle_id                      String?               @db.Uuid
+  route_type                      route_type            @default(fixed)
+  status                          route_status          @default(draft)
+  approved_by                     String?               @db.Uuid
+  approved_at                     DateTime?             @db.Timestamptz(6)
+  created_at                      DateTime              @default(now()) @db.Timestamptz(6)
+  attendance                      attendance[]
+  route_executions                route_executions[]
+  route_optimizations             route_optimizations[]
+  route_stops                     route_stops[]
+  users_routes_approved_byTousers users?                @relation("routes_approved_byTousers", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_routes_driver_idTousers   users?                @relation("routes_driver_idTousers", fields: [driver_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vehicles                        vehicles?             @relation(fields: [vehicle_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([tenant_id, shift, status], map: "routes_tenant_shift_status_idx")
+  @@schema("app")
+}
+
+model school_contacts {
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  school_id String  @db.Uuid
+  name      String  @db.VarChar(255)
+  role      String? @db.VarChar(128)
+  phone     String? @db.VarChar(32)
+  email     String? @db.VarChar(255)
+  schools   schools @relation(fields: [school_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("app")
+}
+
+model school_schedules {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  school_id  String     @db.Uuid
+  shift      shift_type
+  entry_time DateTime   @db.Time(6)
+  exit_time  DateTime   @db.Time(6)
+  schools    schools    @relation(fields: [school_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("app")
+}
+
+model schools {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id        String             @db.Uuid
+  name             String             @db.VarChar(255)
+  address          String?            @db.VarChar(512)
+  lat              Decimal?           @db.Decimal(10, 7)
+  lng              Decimal?           @db.Decimal(10, 7)
+  type             school_type        @default(school)
+  status           user_status        @default(active)
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  route_stops      route_stops[]
+  school_contacts  school_contacts[]
+  school_schedules school_schedules[]
+  students         students[]
+
+  @@index([tenant_id, status], map: "schools_tenant_status_idx")
+  @@schema("app")
+}
+
+model student_addresses {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id String   @db.Uuid
+  address    String?  @db.VarChar(512)
+  lat        Decimal? @db.Decimal(10, 7)
+  lng        Decimal? @db.Decimal(10, 7)
+  students   students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("app")
+}
+
+model student_guardians {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id String   @db.Uuid
+  name       String   @db.VarChar(255)
+  phone      String   @db.VarChar(32)
+  email      String?  @db.VarChar(255)
+  is_primary Boolean  @default(false)
+  students   students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("app")
+}
+
+model students {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id         String              @db.Uuid
+  name              String              @db.VarChar(255)
+  school_id         String              @db.Uuid
+  shift             shift_type
+  class_name        String?             @db.VarChar(64)
+  special_needs     String?
+  monthly_value     Decimal?            @db.Decimal(10, 2)
+  contract_start    DateTime?           @db.Date
+  status            user_status         @default(active)
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  attendance        attendance[]
+  route_stops       route_stops[]
+  student_addresses student_addresses[]
+  student_guardians student_guardians[]
+  schools           schools             @relation(fields: [school_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([tenant_id, school_id, shift], map: "students_tenant_school_idx")
+  @@index([tenant_id, status], map: "students_tenant_status_idx")
+  @@schema("app")
+}
+
+model users {
+  id                                    String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id                             String                @db.Uuid
+  firebase_uid                          String                @unique @db.VarChar(128)
+  role                                  user_role
+  name                                  String                @db.VarChar(255)
+  email                                 String                @db.VarChar(255)
+  fcm_token                             String?               @db.VarChar(512)
+  status                                user_status           @default(active)
+  created_at                            DateTime              @default(now()) @db.Timestamptz(6)
+  attendance                            attendance[]
+  driver_profiles                       driver_profiles?
+  invite_tokens                         invite_tokens[]
+  messages_messages_from_user_idTousers messages[]            @relation("messages_from_user_idTousers")
+  messages_messages_to_user_idTousers   messages[]            @relation("messages_to_user_idTousers")
+  notifications                         notifications[]
+  route_executions                      route_executions[]
+  route_optimizations                   route_optimizations[]
+  routes_routes_approved_byTousers      routes[]              @relation("routes_approved_byTousers")
+  routes_routes_driver_idTousers        routes[]              @relation("routes_driver_idTousers")
+  vehicle_drivers                       vehicle_drivers[]
+
+  @@index([tenant_id, role], map: "users_tenant_role_idx")
+  @@schema("app")
+}
+
+model vehicle_drivers {
+  vehicle_id     String   @db.Uuid
+  driver_user_id String   @db.Uuid
+  assigned_at    DateTime @default(now()) @db.Timestamptz(6)
+  users          users    @relation(fields: [driver_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vehicles       vehicles @relation(fields: [vehicle_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([vehicle_id, driver_user_id])
+  @@schema("app")
+}
+
+model vehicles {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id        String             @db.Uuid
+  plate            String             @db.VarChar(16)
+  capacity         Int
+  model            String?            @db.VarChar(128)
+  totem_id         String?            @db.VarChar(128)
+  status           user_status        @default(active)
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  route_executions route_executions[]
+  routes           routes[]
+  vehicle_drivers  vehicle_drivers[]
+
+  @@unique([tenant_id, plate], map: "vehicles_tenant_plate_unique")
+  @@schema("app")
+}
+
+enum attend_dec {
+  yes
+  no
+  no_response
+
+  @@schema("app")
+}
+
+enum attend_src {
+  guardian
+  manager
+  api
+
+  @@schema("app")
+}
+
+enum event_type {
+  delay
+  detour
+  mechanical
+  observation
+  other
+
+  @@schema("app")
+}
+
+enum exec_status {
+  prepared
+  in_progress
+  finished
+  cancelled
+
+  @@schema("app")
+}
+
+enum invite_role {
+  driver
+
+  @@schema("app")
+}
+
+enum route_status {
+  draft
+  approved
+  active
+  inactive
+
+  @@schema("app")
+}
+
+enum route_type {
+  fixed
+  variable
+
+  @@schema("app")
+}
+
+enum school_type {
+  school
+  service_point
+
+  @@schema("app")
+}
+
+enum shift_type {
+  morning
+  afternoon
+  evening
+
+  @@schema("app")
+}
+
+enum stop_status {
+  pending
+  boarded
+  skipped
+  absent
+
+  @@schema("app")
+}
+
+enum stop_type {
+  pickup
+  dropoff
+  school
+
+  @@schema("app")
+}
+
+enum user_role {
+  manager
+  driver
+  guardian
+
+  @@schema("app")
+}
+
+enum user_status {
+  active
+  inactive
+
+  @@schema("app")
+}

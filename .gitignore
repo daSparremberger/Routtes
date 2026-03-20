@@ -1,0 +1,23 @@
+node_modules/
+dist/
+.env
+.env.local
+*.env
+
+# Prisma generated
+**/prisma/generated/
+**/generated/prisma/
+
+# Railway
+.railway/
+
+# Obsidian vault (private — never commit)
+RouttesApp_Core/
+
+# Firebase debug logs
+firebase-debug*.log
+firebase-debug.*.log
+
+# OS
+.DS_Store
+Thumbs.db
