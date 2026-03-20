@@ -10,6 +10,7 @@ import { ModulesModule } from './admin/modules/modules.module';
 import { OrganizationsModule } from './admin/organizations/organizations.module';
 import { ContractsModule } from './admin/contracts/contracts.module';
 import { InvoicesModule } from './admin/invoices/invoices.module';
+import { DashboardModule } from './admin/dashboard/dashboard.module';
 import { RequestLoggerMiddleware } from './shared/middleware/request-logger.middleware';
 
 @Module({
@@ -27,6 +28,7 @@ import { RequestLoggerMiddleware } from './shared/middleware/request-logger.midd
     OrganizationsModule,
     ContractsModule,
     InvoicesModule,
+    DashboardModule,
   ],
 })
 export class AppModule {
