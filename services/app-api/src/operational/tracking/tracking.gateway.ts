@@ -18,7 +18,7 @@ import { LocationUpdateDto } from './dto/location-update.dto';
  */
 @WebSocketGateway({
   cors: {
-    origin: '*', // replaced by actual dashboard domain in production via CORS env var
+    origin: '*', // TODO: restrict to dashboard domain before production — @WebSocketGateway decorators are evaluated at init time and cannot read env vars directly; requires IoAdapter configuration or process.env read here
   },
   namespace: 'tracking',
 })
