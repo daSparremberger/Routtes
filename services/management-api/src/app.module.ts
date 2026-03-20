@@ -11,6 +11,7 @@ import { OrganizationsModule } from './admin/organizations/organizations.module'
 import { ContractsModule } from './admin/contracts/contracts.module';
 import { InvoicesModule } from './admin/invoices/invoices.module';
 import { DashboardModule } from './admin/dashboard/dashboard.module';
+import { InvitesModule } from './admin/invites/invites.module';
 import { RequestLoggerMiddleware } from './shared/middleware/request-logger.middleware';
 
 @Module({
@@ -29,6 +30,7 @@ import { RequestLoggerMiddleware } from './shared/middleware/request-logger.midd
     ContractsModule,
     InvoicesModule,
     DashboardModule,
+    InvitesModule,
   ],
 })
 export class AppModule {
