@@ -1,5 +1,5 @@
 import {
-  Body, Controller, Delete, Get, Param, ParseUUIDPipe,
+  Body, Controller, Get, Param, ParseUUIDPipe,
   Patch, Post, Query, UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -41,7 +41,7 @@ export class TenantsController {
     return this.service.update(id, dto, user.sub);
   }
 
-  @Delete(':id')
+  @Patch(':id/deactivate')
   deactivate(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
     return this.service.deactivate(id, user.sub);
   }
