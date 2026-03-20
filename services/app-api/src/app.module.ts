@@ -6,6 +6,7 @@ import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { RequestLoggerMiddleware } from './shared/middleware/request-logger.middleware';
 import { SchoolsModule } from './operational/schools/schools.module';
+import { StudentsModule } from './operational/students/students.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { SchoolsModule } from './operational/schools/schools.module';
     HealthModule,
     AuthModule,
     SchoolsModule,
+    StudentsModule,
   ],
 })
 export class AppModule {
