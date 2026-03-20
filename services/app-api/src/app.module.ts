@@ -14,6 +14,8 @@ import { AttendanceModule } from './operational/attendance/attendance.module';
 import { ExecutionsModule } from './operational/executions/executions.module';
 import { HistoryModule } from './operational/history/history.module';
 import { TrackingModule } from './operational/tracking/tracking.module';
+import { NotificationsModule } from './communication/notifications/notifications.module';
+import { OutboxModule } from './shared/outbox/outbox.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { TrackingModule } from './operational/tracking/tracking.module';
     ExecutionsModule,
     HistoryModule,
     TrackingModule,
+    NotificationsModule,
+    OutboxModule,
   ],
 })
 export class AppModule {

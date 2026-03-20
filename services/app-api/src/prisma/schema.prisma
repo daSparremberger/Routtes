@@ -115,13 +115,16 @@ model notifications {
 }
 
 model outbox_events {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  aggregate_type String   @db.VarChar(64)
-  aggregate_id   String   @db.Uuid
-  event_type     String   @db.VarChar(128)
-  payload        Json
-  published      Boolean  @default(false)
-  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  aggregate_type     String   @db.VarChar(64)
+  aggregate_id       String   @db.Uuid
+  event_type         String   @db.VarChar(128)
+  payload            Json
+  published          Boolean  @default(false)
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  retry_count        Int      @default(0)
+  last_error         String?
+  failed_permanently Boolean  @default(false)
 
   @@schema("app")
 }
