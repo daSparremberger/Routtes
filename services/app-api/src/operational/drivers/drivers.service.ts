@@ -58,7 +58,7 @@ export class DriversService {
     const { cnh, cnh_validity, cnh_category, ...userFields } = dto;
 
     const user = await this.prisma.users.update({
-      where: { id },
+      where: { id, tenant_id: tenantId },
       data: {
         ...(userFields.name !== undefined && { name: userFields.name }),
         ...(userFields.email !== undefined && { email: userFields.email }),
@@ -89,13 +89,13 @@ export class DriversService {
   async remove(tenantId: string, id: string) {
     await this.findOne(tenantId, id);
     return this.prisma.users.update({
-      where: { id },
+      where: { id, tenant_id: tenantId },
       data: { status: 'inactive' as user_status },
     });
   }
 
   async generateInvite(tenantId: string, createdBy: string, driverUserId: string) {
-    await this.findOne(tenantId, driverUserId);
+    const driver = await this.findOne(tenantId, driverUserId);
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
@@ -106,15 +106,21 @@ export class DriversService {
         role: 'driver' as invite_role,
         expires_at: expiresAt,
         created_by: createdBy,
+        email: driver.email,
       },
     });
   }
 
   async resendInvite(tenantId: string, createdBy: string, driverUserId: string) {
-    await this.findOne(tenantId, driverUserId);
+    const driver = await this.findOne(tenantId, driverUserId);
 
     const existing = await this.prisma.invite_tokens.findFirst({
-      where: { tenant_id: tenantId, role: 'driver' as invite_role, used_at: null },
+      where: {
+        tenant_id: tenantId,
+        role: 'driver' as invite_role,
+        used_at: null,
+        email: driver.email,
+      },
       orderBy: { expires_at: 'desc' },
     });
 
