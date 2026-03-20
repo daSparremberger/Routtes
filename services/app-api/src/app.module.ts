@@ -8,6 +8,7 @@ import { RequestLoggerMiddleware } from './shared/middleware/request-logger.midd
 import { SchoolsModule } from './operational/schools/schools.module';
 import { StudentsModule } from './operational/students/students.module';
 import { DriversModule } from './operational/drivers/drivers.module';
+import { VehiclesModule } from './operational/vehicles/vehicles.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { DriversModule } from './operational/drivers/drivers.module';
     SchoolsModule,
     StudentsModule,
     DriversModule,
+    VehiclesModule,
   ],
 })
 export class AppModule {
