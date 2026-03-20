@@ -11,6 +11,7 @@ import { DriversModule } from './operational/drivers/drivers.module';
 import { VehiclesModule } from './operational/vehicles/vehicles.module';
 import { RoutesModule } from './operational/routes/routes.module';
 import { AttendanceModule } from './operational/attendance/attendance.module';
+import { ExecutionsModule } from './operational/executions/executions.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AttendanceModule } from './operational/attendance/attendance.module';
     VehiclesModule,
     RoutesModule,
     AttendanceModule,
+    ExecutionsModule,
   ],
 })
 export class AppModule {
