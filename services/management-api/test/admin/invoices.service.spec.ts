@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { InvoicesService } from './invoices.service';
-import { AuditService } from '../../shared/audit/audit.service';
-import { PrismaService } from '../../prisma/prisma.service';
+import { InvoicesService } from '../../src/admin/invoices/invoices.service';
+import { AuditService } from '../../src/shared/audit/audit.service';
+import { PrismaService } from '../../src/prisma/prisma.service';
 
 const prismaMock = {
   invoices: {
