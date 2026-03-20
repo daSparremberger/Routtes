@@ -8,7 +8,7 @@ export const configValidationSchema = Joi.object({
   JWT_SECRET: Joi.string().required(),
   JWT_EXPIRY: Joi.string().default('15m'),
   JWT_REFRESH_EXPIRY: Joi.string().default('7d'),
-  MAPBOX_TOKEN: Joi.string().required(),
-  WHATSAPP_API_TOKEN: Joi.string().required(),
+  MAPBOX_TOKEN: Joi.string().optional(),
+  WHATSAPP_API_TOKEN: Joi.string().optional(),
   APP_PORT: Joi.number().default(3001),
 });
