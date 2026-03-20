@@ -59,7 +59,7 @@ export class StudentsService {
   async update(tenantId: string, id: string, dto: UpdateStudentDto) {
     await this.findOne(tenantId, id);
     return this.prisma.students.update({
-      where: { id },
+      where: { id, tenant_id: tenantId },
       data: {
         ...(dto.name !== undefined && { name: dto.name }),
         ...(dto.school_id !== undefined && { school_id: dto.school_id }),
@@ -78,7 +78,7 @@ export class StudentsService {
   async remove(tenantId: string, id: string) {
     await this.findOne(tenantId, id);
     return this.prisma.students.update({
-      where: { id },
+      where: { id, tenant_id: tenantId },
       data: { status: 'inactive' as user_status },
     });
   }
@@ -98,7 +98,9 @@ export class StudentsService {
 
   async removeGuardian(tenantId: string, studentId: string, guardianId: string) {
     await this.findOne(tenantId, studentId);
-    return this.prisma.student_guardians.delete({ where: { id: guardianId } });
+    return this.prisma.student_guardians.deleteMany({
+      where: { id: guardianId, student_id: studentId },
+    });
   }
 
   async addAddress(tenantId: string, studentId: string, dto: CreateAddressDto) {
@@ -115,7 +117,9 @@ export class StudentsService {
 
   async removeAddress(tenantId: string, studentId: string, addressId: string) {
     await this.findOne(tenantId, studentId);
-    return this.prisma.student_addresses.delete({ where: { id: addressId } });
+    return this.prisma.student_addresses.deleteMany({
+      where: { id: addressId, student_id: studentId },
+    });
   }
 
   async exportCsv(tenantId: string): Promise<string> {
