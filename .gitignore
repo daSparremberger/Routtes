@@ -18,6 +18,12 @@ RouttesApp_Core/
 firebase-debug*.log
 firebase-debug.*.log
 
+# Agent configuration (private)
+.claude/
+CLAUDE.md
+AGENTS.md
+docs/superpowers/
+
 # OS
 .DS_Store
 Thumbs.db
