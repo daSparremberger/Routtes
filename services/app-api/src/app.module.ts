@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { RequestLoggerMiddleware } from './shared/middleware/request-logger.middleware';
 import { SchoolsModule } from './operational/schools/schools.module';
 import { StudentsModule } from './operational/students/students.module';
+import { DriversModule } from './operational/drivers/drivers.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { StudentsModule } from './operational/students/students.module';
     AuthModule,
     SchoolsModule,
     StudentsModule,
+    DriversModule,
   ],
 })
 export class AppModule {
