@@ -74,7 +74,7 @@ describe('FcmService', () => {
     ).resolves.not.toThrow();
 
     expect(prisma.users.update).toHaveBeenCalledWith({
-      where: { id: 'user-1' },
+      where: { id: 'user-1', tenant_id: 'tenant-1' },
       data: { fcm_token: null },
     });
     expect(prisma.notifications.create).not.toHaveBeenCalled();

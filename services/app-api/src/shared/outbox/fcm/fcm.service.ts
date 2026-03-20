@@ -45,7 +45,7 @@ export class FcmService {
 
       if (isExpiredToken) {
         await this.prisma.users.update({
-          where: { id: userId },
+          where: { id: userId, tenant_id: tenantId },
           data: { fcm_token: null },
         });
         this.logger.log(`FCM token cleared for user ${userId} (expired/invalid)`);
