@@ -146,7 +146,11 @@ export class ExecutionsService {
         data: { status: dto.status, recorded_at: new Date() },
       });
 
-      if (dto.status === StopStatus.BOARDED && (executionStop as any).route_stops?.student_id) {
+      if (
+        dto.status === StopStatus.BOARDED &&
+        (executionStop as any).route_stops?.stop_type === 'pickup' &&
+        (executionStop as any).route_stops?.student_id
+      ) {
         await this.writeOutbox(tx, executionId, 'STUDENT_BOARDED', {
           tenantId,
           executionId,

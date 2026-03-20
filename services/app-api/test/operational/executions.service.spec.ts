@@ -170,7 +170,7 @@ describe('ExecutionsService', () => {
   });
 
   describe('recordStop()', () => {
-    it('should mark execution_stop as boarded and write STUDENT_BOARDED outbox event (RF14.3)', async () => {
+    it('should mark execution_stop as boarded and write STUDENT_BOARDED outbox event for pickup stops (RF14.3)', async () => {
       prisma.route_executions.findFirst.mockResolvedValue(mockExecutionInProgress);
       prisma.execution_stops.findFirst.mockResolvedValue({
         id: 'es-1',
@@ -186,6 +186,33 @@ describe('ExecutionsService', () => {
       });
 
       expect(prisma.$transaction).toHaveBeenCalled();
+    });
+
+    it('should NOT emit STUDENT_BOARDED event for school/dropoff stops (RF14.3)', async () => {
+      prisma.route_executions.findFirst.mockResolvedValue(mockExecutionInProgress);
+      prisma.execution_stops.findFirst.mockResolvedValue({
+        id: 'es-2',
+        execution_id: 'exec-uuid-1',
+        route_stop_id: 'stop-2',
+        status: 'pending',
+        route_stops: { student_id: 's1', stop_type: 'school' },
+      });
+
+      const writeOutboxSpy = jest.spyOn(service as any, 'writeOutbox');
+
+      await service.recordStop(tenantId, 'exec-uuid-1', {
+        execution_stop_id: 'es-2',
+        status: StopStatus.BOARDED,
+      });
+
+      // Verify that writeOutbox was NOT called for a school stop
+      expect(writeOutboxSpy).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'STUDENT_BOARDED',
+        expect.anything(),
+      );
+      writeOutboxSpy.mockRestore();
     });
 
     it('should throw BadRequestException when recording a stop on a non-in_progress execution', async () => {
