@@ -74,6 +74,13 @@ describe('AuthService (app-api)', () => {
 
       await expect(service.login('token')).rejects.toThrow(UnauthorizedException);
     });
+
+    it('should throw UnauthorizedException when user has no tenant_id', async () => {
+      firebase.verifyIdToken.mockResolvedValue({ uid: 'firebase-uid-2' } as any);
+      prisma.users.findUnique.mockResolvedValue({ ...mockManager, tenant_id: null });
+
+      await expect(service.login('token')).rejects.toThrow(UnauthorizedException);
+    });
   });
 
   describe('refresh', () => {
