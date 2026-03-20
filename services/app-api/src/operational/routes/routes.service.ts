@@ -54,7 +54,7 @@ export class RoutesService {
 
   async update(tenantId: string, id: string, dto: UpdateRouteDto) {
     await this.findOne(tenantId, id);
-    return this.prisma.routes.update({ where: { id }, data: dto });
+    return this.prisma.routes.update({ where: { id, tenant_id: tenantId }, data: dto });
   }
 
   async remove(tenantId: string, id: string) {

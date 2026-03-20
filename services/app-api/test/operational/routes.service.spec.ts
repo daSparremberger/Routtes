@@ -119,9 +119,19 @@ describe('RoutesService', () => {
           route_id: 'route-uuid-1',
           optimized_by: managerId,
           criteria: 'distance',
+          stops_order_before: expect.any(Array),
+          stops_order_after: expect.any(Array),
         }),
       }),
     );
+  });
+
+  it('should throw BadRequestException when route has fewer than 2 stops', async () => {
+    prisma.routes.findFirst.mockResolvedValue(mockRoute);
+    prisma.route_stops.findMany.mockResolvedValue([mockStops[0]]); // only 1 stop
+
+    await expect(service.optimize(tenantId, 'route-uuid-1', managerId, 'distance'))
+      .rejects.toThrow(BadRequestException);
   });
 
   it('should approve a draft route (RF13.6)', async () => {
