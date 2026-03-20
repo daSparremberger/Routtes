@@ -8,6 +8,7 @@ import { TenantsModule } from './admin/tenants/tenants.module';
 import { LicensesModule } from './admin/licenses/licenses.module';
 import { ModulesModule } from './admin/modules/modules.module';
 import { OrganizationsModule } from './admin/organizations/organizations.module';
+import { ContractsModule } from './admin/contracts/contracts.module';
 import { RequestLoggerMiddleware } from './shared/middleware/request-logger.middleware';
 
 @Module({
@@ -23,6 +24,7 @@ import { RequestLoggerMiddleware } from './shared/middleware/request-logger.midd
     LicensesModule,
     ModulesModule,
     OrganizationsModule,
+    ContractsModule,
   ],
 })
 export class AppModule {
