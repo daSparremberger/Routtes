@@ -5,6 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { TenantsModule } from './admin/tenants/tenants.module';
+import { LicensesModule } from './admin/licenses/licenses.module';
 import { RequestLoggerMiddleware } from './shared/middleware/request-logger.middleware';
 
 @Module({
@@ -17,6 +18,7 @@ import { RequestLoggerMiddleware } from './shared/middleware/request-logger.midd
     HealthModule,
     AuthModule,
     TenantsModule,
+    LicensesModule,
   ],
 })
 export class AppModule {
