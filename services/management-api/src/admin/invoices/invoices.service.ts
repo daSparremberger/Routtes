@@ -1,4 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { $Enums } from '../../generated/prisma';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../../shared/audit/audit.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
@@ -46,25 +47,27 @@ export class InvoicesService {
     let generated = 0;
     let skipped = 0;
 
-    for (const contract of activeContracts) {
-      const exists = await this.prisma.invoices.findFirst({
-        where: { contract_id: contract.id, competence_month: competenceMonth },
-      });
-      if (exists) {
-        skipped++;
-        continue;
-      }
+    await this.prisma.$transaction(async (tx) => {
+      for (const contract of activeContracts) {
+        const exists = await tx.invoices.findFirst({
+          where: { contract_id: contract.id, competence_month: competenceMonth },
+        });
+        if (exists) {
+          skipped++;
+          continue;
+        }
 
-      await this.prisma.invoices.create({
-        data: {
-          contract_id: contract.id,
-          competence_month: competenceMonth,
-          value: contract.monthly_value,
-          status: 'pending',
-        },
-      });
-      generated++;
-    }
+        await tx.invoices.create({
+          data: {
+            contract_id: contract.id,
+            competence_month: competenceMonth,
+            value: contract.monthly_value,
+            status: 'pending',
+          },
+        });
+        generated++;
+      }
+    });
 
     await this.audit.log({
       actorId,
@@ -76,10 +79,10 @@ export class InvoicesService {
     return { generated, skipped, competenceMonth: dto.competenceMonth };
   }
 
-  async findAll(filters?: { status?: string; contractId?: string }) {
+  async findAll(filters?: { status?: $Enums.invoice_status; contractId?: string }) {
     return this.prisma.invoices.findMany({
       where: {
-        ...(filters?.status ? { status: filters.status as any } : {}),
+        ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.contractId ? { contract_id: filters.contractId } : {}),
       },
       include: { contracts: { include: { organizations: true } } },

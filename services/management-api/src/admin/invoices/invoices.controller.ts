@@ -17,6 +17,7 @@ import { InvoicesService } from './invoices.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { BulkGenerateDto } from './dto/bulk-generate.dto';
 import { JwtPayload, UserRole } from '@routtes/shared';
+import { $Enums } from '../../generated/prisma';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.SUPERADMIN)
@@ -39,7 +40,7 @@ export class InvoicesController {
     @Query('status') status?: string,
     @Query('contractId') contractId?: string,
   ) {
-    return this.service.findAll({ status, contractId });
+    return this.service.findAll({ status: status as $Enums.invoice_status | undefined, contractId });
   }
 
   @Get(':id')

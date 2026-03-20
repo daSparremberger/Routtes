@@ -13,6 +13,7 @@ const prismaMock = {
     findFirst: jest.fn(),
   },
   contracts: { findMany: jest.fn() },
+  $transaction: jest.fn(),
 };
 const auditMock = { log: jest.fn() };
 
@@ -21,6 +22,7 @@ describe('InvoicesService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    prismaMock.$transaction.mockImplementation((cb: (tx: typeof prismaMock) => Promise<unknown>) => cb(prismaMock));
     const module = await Test.createTestingModule({
       providers: [
         InvoicesService,
