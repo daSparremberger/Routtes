@@ -13,6 +13,7 @@ import { RoutesModule } from './operational/routes/routes.module';
 import { AttendanceModule } from './operational/attendance/attendance.module';
 import { ExecutionsModule } from './operational/executions/executions.module';
 import { HistoryModule } from './operational/history/history.module';
+import { TrackingModule } from './operational/tracking/tracking.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { HistoryModule } from './operational/history/history.module';
     AttendanceModule,
     ExecutionsModule,
     HistoryModule,
+    TrackingModule,
   ],
 })
 export class AppModule {
