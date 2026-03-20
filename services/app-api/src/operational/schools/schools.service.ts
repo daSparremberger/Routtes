@@ -41,7 +41,7 @@ export class SchoolsService {
 
   async findOne(tenantId: string, id: string) {
     const school = await this.prisma.schools.findFirst({
-      where: { id, tenant_id: tenantId },
+      where: { id, tenant_id: tenantId, status: 'active' as user_status },
       include: { school_schedules: true, school_contacts: true },
     });
     if (!school) throw new NotFoundException(`School ${id} not found`);
@@ -105,6 +105,8 @@ export class SchoolsService {
 
   async removeContact(tenantId: string, schoolId: string, contactId: string) {
     await this.findOne(tenantId, schoolId);
-    return this.prisma.school_contacts.delete({ where: { id: contactId } });
+    return this.prisma.school_contacts.deleteMany({
+      where: { id: contactId, school_id: schoolId },
+    });
   }
 }
