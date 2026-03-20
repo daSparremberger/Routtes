@@ -6,6 +6,7 @@ import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { TenantsModule } from './admin/tenants/tenants.module';
 import { LicensesModule } from './admin/licenses/licenses.module';
+import { ModulesModule } from './admin/modules/modules.module';
 import { RequestLoggerMiddleware } from './shared/middleware/request-logger.middleware';
 
 @Module({
@@ -19,6 +20,7 @@ import { RequestLoggerMiddleware } from './shared/middleware/request-logger.midd
     AuthModule,
     TenantsModule,
     LicensesModule,
+    ModulesModule,
   ],
 })
 export class AppModule {
