@@ -21,7 +21,8 @@ export class AuditService {
         },
       });
     } catch (err) {
-      this.logger.error(`Audit log failed: ${err.message}`, err.stack);
+      const e = err as Error;
+      this.logger.error(`Audit log failed: ${e.message}`, e.stack);
     }
   }
 }
