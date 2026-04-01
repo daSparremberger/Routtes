@@ -10,27 +10,29 @@ const config: Config = {
     extend: {
       // ─── COLOR SYSTEM ───────────────────────────────────────────────────────
       colors: {
-        // Brand — Azul inteligência operacional
+        // Brand — Amber operacional (design dark/warm)
         brand: {
-          50:  '#EFF6FF',
-          100: '#DBEAFE',
-          200: '#BFDBFE',
-          300: '#93C5FD',
-          400: '#60A5FA',
-          500: '#3B82F6',
-          600: '#2563EB', // primary action
-          700: '#1D4ED8',
-          800: '#1E40AF',
-          900: '#1E3A8A',
-          950: '#172554',
+          50:  '#fffbeb',
+          100: '#fef3c7',
+          200: '#fde68a',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#f7af27', // primary accent
+          600: '#d97706',
+          700: '#b45309',
+          800: '#92400e',
+          900: '#78350f',
+          950: '#451a03',
         },
-        // Sidebar / Shell — Navy dark (base da UI)
+        // Shell — Dark warm (sidebar + backgrounds)
         shell: {
-          900: '#0B1120', // sidebar bg
-          800: '#0F1729', // sidebar hover
-          700: '#162035', // sidebar active
-          600: '#1E2D45',
-          500: '#2A3F5F',
+          900: '#191711', // sidebar bg / outermost
+          800: '#1b1912', // hover
+          700: '#221f17', // content area bg
+          600: '#262117', // card bg
+          500: '#2e2b20', // elevated card
+          400: '#3a3626', // borders
+          300: '#4a4635', // muted borders
         },
         // Operational — Emerald para estados ativos
         active: {
@@ -50,20 +52,20 @@ const config: Config = {
           DEFAULT: '#EF4444',
           dark:  '#DC2626',
         },
-        // Neutral Surface
+        // Surface (alias warm)
         surface: {
-          DEFAULT: '#F8FAFC', // page background
-          card:    '#FFFFFF',
-          hover:   '#F1F5F9',
-          border:  '#E2E8F0',
+          DEFAULT: '#221f17',
+          card:    '#262117',
+          hover:   '#2e2b20',
+          border:  '#ffffff0f',
         },
-        // Text hierarchy
+        // Text hierarchy — warm cream
         ink: {
-          primary:   '#0F172A', // slate-900
-          secondary: '#475569', // slate-600
-          muted:     '#94A3B8', // slate-400
-          disabled:  '#CBD5E1', // slate-300
-          inverted:  '#F8FAFC', // on dark bg
+          primary:   '#f7f1e4', // cream white
+          secondary: '#f7f1e4cc', // 80%
+          muted:     '#f7f1e48c', // 55%
+          disabled:  '#f7f1e44d', // 30%
+          inverted:  '#1f1a15',
         },
       },
 
@@ -117,11 +119,11 @@ const config: Config = {
 
       // ─── LAYOUT ──────────────────────────────────────────────────────────────
       width: {
-        sidebar: '240px',
-        'sidebar-collapsed': '64px',
+        sidebar: '88px',
+        'sidebar-collapsed': '88px',
       },
       height: {
-        header: '60px',
+        header: '72px',
       },
 
       // ─── ANIMATION ───────────────────────────────────────────────────────────

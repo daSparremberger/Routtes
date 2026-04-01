@@ -1,70 +1,99 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { Bell, Search } from 'lucide-react'
+import { Search, MessageCircle, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState } from 'react'
 
 interface HeaderProps {
   title?: string
-  subtitle?: string
+  search?: string
+  onSearchChange?: (v: string) => void
   actions?: React.ReactNode
   className?: string
+  canGoBack?: boolean
+  canGoForward?: boolean
+  onBack?: () => void
+  onForward?: () => void
 }
 
-export function Header({ title, subtitle, actions, className }: HeaderProps) {
+export function Header({
+  title,
+  search,
+  onSearchChange,
+  actions,
+  className,
+  canGoBack,
+  canGoForward,
+  onBack,
+  onForward,
+}: HeaderProps) {
+  const [chatOpen, setChatOpen] = useState(false)
+
   return (
     <header
       className={cn(
-        'flex h-header items-center justify-between',
-        'border-b border-surface-border bg-surface-card',
-        'px-6 gap-4 shrink-0',
+        'h-[72px] px-5 border-b bg-shell-900 flex items-center gap-3 relative z-10 shrink-0',
+        'border-white/5',
         className,
       )}
     >
-      {/* Page title */}
-      <div className="min-w-0">
-        {title && (
-          <h1 className="text-base font-semibold text-ink-primary truncate">{title}</h1>
+      {/* Nav arrows */}
+      <button
+        onClick={onBack}
+        disabled={!canGoBack}
+        className={cn(
+          'h-11 w-7 flex items-center justify-center transition-all duration-200',
+          canGoBack ? 'text-ink-muted hover:text-ink-primary' : 'text-white/20 cursor-not-allowed',
         )}
-        {subtitle && (
-          <p className="text-xs text-ink-muted truncate">{subtitle}</p>
+      >
+        <ChevronLeft size={18} strokeWidth={1.8} />
+      </button>
+      <button
+        onClick={onForward}
+        disabled={!canGoForward}
+        className={cn(
+          'h-11 w-7 flex items-center justify-center transition-all duration-200',
+          canGoForward ? 'text-ink-muted hover:text-ink-primary' : 'text-white/20 cursor-not-allowed',
         )}
+      >
+        <ChevronRight size={18} strokeWidth={1.8} />
+      </button>
+
+      {/* Title */}
+      {title && (
+        <div className="min-w-fit pr-2">
+          <h1 className="text-[24px] leading-none font-semibold tracking-[-0.03em] text-ink-primary">
+            {title}
+          </h1>
+        </div>
+      )}
+
+      <div className="flex-1" />
+
+      {/* Search */}
+      <div className="w-[280px] h-11 rounded-[16px] bg-white/5 border border-white/[0.06] flex items-center gap-3 px-4 text-ink-muted focus-within:border-white/12 focus-within:bg-white/[0.06] transition-all duration-200">
+        <Search size={16} />
+        <input
+          value={search ?? ''}
+          onChange={(e) => onSearchChange?.(e.target.value)}
+          placeholder="Buscar"
+          className="bg-transparent outline-none w-full text-sm text-ink-primary placeholder:text-ink-muted"
+        />
       </div>
 
-      {/* Right controls */}
-      <div className="flex items-center gap-2 shrink-0">
-        {/* Search shortcut */}
-        <button
-          className={cn(
-            'hidden md:flex items-center gap-2',
-            'h-8 px-3 rounded-md border border-surface-border',
-            'text-xs text-ink-muted',
-            'hover:border-brand-600/40 hover:text-ink-primary',
-            'transition-colors duration-150',
-          )}
-          aria-label="Buscar"
-        >
-          <Search size={13} />
-          <span>Buscar</span>
-          <kbd className="ml-1 font-mono text-2xs bg-surface-hover px-1 rounded">⌘K</kbd>
-        </button>
+      {/* Chat toggle */}
+      <button
+        onClick={() => setChatOpen(!chatOpen)}
+        className={cn(
+          'h-11 flex items-center justify-center transition-all duration-200 px-1',
+          chatOpen ? 'text-ink-primary' : 'text-ink-muted hover:text-ink-primary',
+        )}
+      >
+        <MessageCircle size={18} strokeWidth={1.8} />
+      </button>
 
-        {/* Notifications */}
-        <button
-          className={cn(
-            'relative flex h-8 w-8 items-center justify-center rounded-md',
-            'text-ink-secondary hover:bg-surface-hover hover:text-ink-primary',
-            'transition-colors duration-150',
-          )}
-          aria-label="Notificações"
-        >
-          <Bell size={16} />
-          {/* Unread dot */}
-          <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-danger" />
-        </button>
-
-        {/* Page-level actions */}
-        {actions && <div className="flex items-center gap-2">{actions}</div>}
-      </div>
+      {/* Page-level actions */}
+      {actions && <div className="flex items-center gap-2">{actions}</div>}
     </header>
   )
 }
