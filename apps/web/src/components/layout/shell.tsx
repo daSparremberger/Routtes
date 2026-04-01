@@ -2,38 +2,30 @@
 
 import { Sidebar } from './sidebar'
 import { Header } from './header'
-import { cn } from '@/lib/utils'
 
 interface ShellProps {
   children: React.ReactNode
   title?: string
-  subtitle?: string
   headerActions?: React.ReactNode
-  /** Remove padding interno (ex: páginas de mapa full-bleed) */
-  flushContent?: boolean
+  /** When true the page manages its own search state and receives it via searchValue/onSearchChange */
+  searchValue?: string
+  onSearchChange?: (v: string) => void
 }
 
-// Mock user — será substituído pelo hook de auth
-const mockUser = {
-  name: 'Ana Coordenadora',
-  email: 'ana@transporte.com.br',
-}
-
-export function Shell({ children, title, subtitle, headerActions, flushContent }: ShellProps) {
+export function Shell({ children, title, headerActions, searchValue, onSearchChange }: ShellProps) {
   return (
-    <div className="flex h-screen overflow-hidden bg-surface">
-      <Sidebar user={mockUser} />
+    <div className="flex h-screen overflow-hidden bg-shell-900">
+      <Sidebar />
 
-      {/* Main */}
-      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
-        <Header title={title} subtitle={subtitle} actions={headerActions} />
+      <div className="flex-1 min-w-0 overflow-hidden flex flex-col">
+        <Header
+          title={title}
+          search={searchValue}
+          onSearchChange={onSearchChange}
+          actions={headerActions}
+        />
 
-        <main
-          className={cn(
-            'flex-1 overflow-y-auto',
-            !flushContent && 'p-6',
-          )}
-        >
+        <main className="flex-1 overflow-y-auto p-5 bg-shell-700">
           {children}
         </main>
       </div>
