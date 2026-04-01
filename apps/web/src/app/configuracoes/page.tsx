@@ -33,7 +33,6 @@ export default function ConfiguracoesPage() {
   return (
     <Shell
       title="Configurações"
-      subtitle="Gerencie sua organização e preferências"
     >
       <div className="flex gap-6 animate-fade-in" style={{ minHeight: 'calc(100vh - 140px)' }}>
 
