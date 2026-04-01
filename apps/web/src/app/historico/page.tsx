@@ -96,7 +96,7 @@ export default function HistoricoPage() {
   return (
     <Shell
       title="Histórico"
-      subtitle="Execuções dos últimos 30 dias"
+
       headerActions={
         <div className="flex items-center gap-2">
           <Button variant="secondary" size="sm" icon={<Calendar size={14} />}>Período</Button>

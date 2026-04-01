@@ -113,7 +113,7 @@ export default function FrequenciaPage() {
   return (
     <Shell
       title="Frequência"
-      subtitle="Últimos 7 dias úteis"
+
       headerActions={
         <div className="flex items-center gap-2">
           <Button variant="secondary" size="sm" icon={<Download size={14} />}>Exportar</Button>
