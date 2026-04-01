@@ -1,24 +1,38 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type User } from 'firebase/auth'
+import {
+  onAuthStateChanged,
+  signOut,
+  signInWithPopup,
+  GoogleAuthProvider,
+  type User,
+} from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { loginWithFirebaseToken, setAccessToken } from '@/lib/api'
 import { useRouter } from 'next/navigation'
 
 interface AuthState {
-  user:      User | null
-  tenantId:  string | null
-  loading:   boolean
-  error:     string | null
-  signIn:    (email: string, password: string) => Promise<void>
-  logOut:    () => Promise<void>
+  user:            User | null
+  tenantId:        string | null
+  loading:         boolean
+  error:           string | null
+  signInWithGoogle: () => Promise<void>
+  logOut:          () => Promise<void>
 }
 
 const AuthContext = createContext<AuthState>({
   user: null, tenantId: null, loading: true, error: null,
-  signIn: async () => {}, logOut: async () => {},
+  signInWithGoogle: async () => {}, logOut: async () => {},
 })
+
+async function exchangeToken(firebaseUser: User) {
+  const idToken = await firebaseUser.getIdToken()
+  const { accessToken, refreshToken, tenantId } = await loginWithFirebaseToken(idToken)
+  setAccessToken(accessToken)
+  sessionStorage.setItem('rt', refreshToken)
+  return tenantId
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user,     setUser]     = useState<User | null>(null)
@@ -27,26 +41,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error,    setError]    = useState<string | null>(null)
   const router = useRouter()
 
-  // Exchange Firebase token for app-api JWT
-  async function exchangeToken(firebaseUser: User) {
-    try {
-      const idToken = await firebaseUser.getIdToken()
-      const { accessToken, tenantId: tid } = await loginWithFirebaseToken(idToken)
-      setAccessToken(accessToken)
-      setTenantId(tid)
-      // Store refresh token in sessionStorage (never in localStorage for security)
-      sessionStorage.setItem('rt', (await loginWithFirebaseToken(idToken)).refreshToken)
-    } catch {
-      setAccessToken(null)
-      setTenantId(null)
-    }
-  }
-
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser)
       if (firebaseUser) {
-        await exchangeToken(firebaseUser)
+        try {
+          const tid = await exchangeToken(firebaseUser)
+          setTenantId(tid)
+        } catch {
+          setAccessToken(null)
+          setTenantId(null)
+        }
       } else {
         setAccessToken(null)
         setTenantId(null)
@@ -56,14 +61,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return unsub
   }, [])
 
-  async function signIn(email: string, password: string) {
+  async function signInWithGoogle() {
     setError(null)
+    const provider = new GoogleAuthProvider()
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      await signInWithPopup(auth, provider)
+      router.push('/dashboard')
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao entrar'
+      if (err instanceof Error && (err as { code?: string }).code === 'auth/popup-closed-by-user') return
+      const msg = err instanceof Error ? err.message : 'Erro ao entrar com Google'
       setError(msg.replace('Firebase: ', '').replace(/\(auth.*\)\.?/, '').trim())
-      throw err
     }
   }
 
@@ -76,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, tenantId, loading, error, signIn, logOut }}>
+    <AuthContext.Provider value={{ user, tenantId, loading, error, signInWithGoogle, logOut }}>
       {children}
     </AuthContext.Provider>
   )

@@ -1,107 +1,80 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, LogIn } from 'lucide-react'
+import { useState } from 'react'
+import { motion } from 'motion/react'
 
 export default function LoginPage() {
-  const { signIn, loading, error } = useAuth()
-  const router = useRouter()
-  const [email,    setEmail]    = useState('')
-  const [password, setPassword] = useState('')
-  const [showPwd,  setShowPwd]  = useState(false)
-  const [busy,     setBusy]     = useState(false)
+  const { signInWithGoogle, error } = useAuth()
+  const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setBusy(true)
+  async function handleGoogle() {
+    setLoading(true)
     try {
-      await signIn(email, password)
-      router.push('/dashboard')
-    } catch {
-      // error is already set in context
+      await signInWithGoogle()
     } finally {
-      setBusy(false)
+      setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-shell-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen bg-shell-900 flex items-center justify-center px-6">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-[400px]"
+      >
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-8 justify-center">
-          <div className="h-10 w-10 rounded-[14px] bg-shell-600 border border-white/5 flex items-center justify-center">
-            <div className="h-5 w-5 rounded-full bg-brand-500" />
+        <div className="mb-12">
+          <div className="h-12 w-12 rounded-[18px] bg-shell-600 border border-white/5 flex items-center justify-center mb-8">
+            <div className="h-6 w-6 rounded-full bg-brand-500" />
           </div>
-          <span className="text-xl font-semibold text-ink-primary tracking-tight">Routtes</span>
+
+          <h1 className="text-[32px] font-bold tracking-[-0.04em] text-ink-primary leading-none mb-3">
+            Bem-vindo
+          </h1>
+          <p className="text-base text-ink-muted leading-relaxed">
+            Acesse ou crie sua conta com o Google para continuar.
+          </p>
         </div>
 
-        <div className="rounded-[28px] border border-white/6 bg-shell-600 p-8">
-          <h1 className="text-2xl font-semibold text-ink-primary mb-1">Entrar</h1>
-          <p className="text-sm text-ink-muted mb-6">Acesse o painel de gestão</p>
+        {/* Google button */}
+        <button
+          onClick={handleGoogle}
+          disabled={loading}
+          className="w-full h-14 rounded-[16px] bg-white flex items-center justify-center gap-3 font-semibold text-[#1f1a15] text-[15px] hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+        >
+          {loading ? (
+            <span className="h-5 w-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+          ) : (
+            <GoogleIcon />
+          )}
+          {loading ? 'Entrando…' : 'Continuar com Google'}
+        </button>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-ink-muted mb-1.5 uppercase tracking-wider">
-                E-mail
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                placeholder="seu@email.com"
-                className="w-full h-11 px-4 rounded-[14px] bg-white/5 border border-white/8 text-ink-primary placeholder:text-ink-muted text-sm focus:outline-none focus:border-brand-500/50 focus:bg-white/8 transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-ink-muted mb-1.5 uppercase tracking-wider">
-                Senha
-              </label>
-              <div className="relative">
-                <input
-                  type={showPwd ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  className="w-full h-11 px-4 pr-11 rounded-[14px] bg-white/5 border border-white/8 text-ink-primary placeholder:text-ink-muted text-sm focus:outline-none focus:border-brand-500/50 focus:bg-white/8 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink-primary transition-colors"
-                >
-                  {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <p className="text-sm text-red-400 bg-red-400/10 rounded-[12px] px-4 py-2.5">
-                {error}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={busy || loading}
-              className="w-full h-11 rounded-[14px] bg-brand-500 text-ink-inverted font-semibold text-sm flex items-center justify-center gap-2 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              {busy ? (
-                <span className="h-4 w-4 border-2 border-ink-inverted/30 border-t-ink-inverted rounded-full animate-spin" />
-              ) : (
-                <LogIn size={16} />
-              )}
-              {busy ? 'Entrando…' : 'Entrar'}
-            </button>
-          </form>
-        </div>
-      </div>
+        {/* Error */}
+        {error && (
+          <motion.p
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 text-sm text-red-400 bg-red-400/10 rounded-[12px] px-4 py-3 text-center"
+          >
+            {error}
+          </motion.p>
+        )}
+      </motion.div>
     </div>
+  )
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden>
+      <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+      <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/>
+      <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+      <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a11.994 11.994 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+    </svg>
   )
 }
