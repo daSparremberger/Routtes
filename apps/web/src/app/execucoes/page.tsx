@@ -135,7 +135,7 @@ export default function ExecucoesPage() {
   return (
     <Shell
       title="Execuções"
-      subtitle={`Hoje — ${new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' })}`}
+
       headerActions={
         <Button variant="secondary" size="sm" icon={<Calendar size={14} />}>
           Escolher data
