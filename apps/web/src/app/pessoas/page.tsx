@@ -199,8 +199,8 @@ export default function PessoasPage() {
   const [driverModalOpen, setDriverModalOpen] = useState(false)
   const [driverFormError, setDriverFormError] = useState<string | null>(null)
 
-  const students = useStudents()
-  const drivers = useDrivers()
+  const students = useStudents({ enabled: activeTab === 'students' })
+  const drivers = useDrivers({ enabled: activeTab === 'drivers' })
   const schools = useSchools()
   const createStudent = useCreateStudent()
   const updateStudent = useUpdateStudent()
@@ -322,7 +322,7 @@ export default function PessoasPage() {
               <button
                 type="button"
                 onClick={handleGenerateLink}
-                className="flex h-11 items-center gap-2 rounded-[16px] bg-white/[0.05] px-4 text-sm font-medium text-ink-primary transition hover:bg-white/[0.08]"
+                className="flex h-10 items-center justify-center gap-2 rounded-[15px] bg-white/[0.05] px-4 text-sm font-medium text-ink-primary transition hover:bg-white/[0.08] lg:h-11 lg:rounded-[16px]"
               >
                 <Link2 size={16} />
                 Gerar link
@@ -368,7 +368,7 @@ export default function PessoasPage() {
               <button
                 type="button"
                 onClick={handleGenerateLink}
-                className="flex h-11 items-center gap-2 rounded-[16px] bg-white/[0.05] px-4 text-sm font-medium text-ink-primary transition hover:bg-white/[0.08]"
+                className="flex h-10 items-center justify-center gap-2 rounded-[15px] bg-white/[0.05] px-4 text-sm font-medium text-ink-primary transition hover:bg-white/[0.08] lg:h-11 lg:rounded-[16px]"
               >
                 <Link2 size={16} />
                 Gerar link

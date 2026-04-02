@@ -86,7 +86,8 @@ function mapStudent(student: StudentApi): Student {
   }
 }
 
-export function useStudents(schoolId?: string) {
+export function useStudents(options?: { enabled?: boolean; schoolId?: string }) {
+  const { enabled = true, schoolId } = options ?? {}
   const path = schoolId ? `/students?schoolId=${schoolId}` : '/students'
   return useQuery<Student[]>({
     queryKey: ['students', schoolId],
@@ -94,6 +95,7 @@ export function useStudents(schoolId?: string) {
       const data = await api.get<StudentApi[]>(path)
       return data.map(mapStudent)
     },
+    enabled,
   })
 }
 

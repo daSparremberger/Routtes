@@ -47,13 +47,15 @@ function mapDriver(driver: DriverApi): Driver {
   }
 }
 
-export function useDrivers() {
+export function useDrivers(options?: { enabled?: boolean }) {
+  const { enabled = true } = options ?? {}
   return useQuery<Driver[]>({
     queryKey: ['drivers'],
     queryFn: async () => {
       const data = await api.get<DriverApi[]>('/drivers')
       return data.map(mapDriver)
     },
+    enabled,
   })
 }
 
