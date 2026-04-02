@@ -23,7 +23,7 @@ export interface School {
   type?: 'school' | 'service_point'
   status?: 'active' | 'inactive'
   contacts?: { id: string; name: string; role?: string; phone?: string; email?: string }[]
-  schedules?: { id: string; shift: string; entryTime: string; exitTime: string }[]
+  schedules?: { id: string; shift: string; entryTime?: string; exitTime?: string }[]
   createdAt?: string
 }
 
@@ -34,6 +34,25 @@ export interface SchoolUpsertInput {
   lng?: number
   type: 'school' | 'service_point'
   status?: 'active' | 'inactive'
+}
+
+export interface SchoolScheduleInput {
+  shift: 'morning' | 'afternoon' | 'evening'
+  entry_time: string
+  exit_time: string
+}
+
+export interface SchoolContactInput {
+  name: string
+  role?: string
+  phone?: string
+  email?: string
+}
+
+function normalizeTime(value?: string | null) {
+  if (!value) return undefined
+  const match = value.match(/(\d{2}):(\d{2})/)
+  return match ? `${match[1]}:${match[2]}` : value
 }
 
 function mapSchool(school: SchoolApi): School {
@@ -55,8 +74,8 @@ function mapSchool(school: SchoolApi): School {
     schedules: school.school_schedules?.map((schedule) => ({
       id: schedule.id,
       shift: schedule.shift,
-      entryTime: schedule.entry_time,
-      exitTime: schedule.exit_time,
+      entryTime: normalizeTime(schedule.entry_time),
+      exitTime: normalizeTime(schedule.exit_time),
     })),
     createdAt: school.created_at,
   }
@@ -101,6 +120,42 @@ export function useDeleteSchool() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => api.delete(`/schools/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['schools'] }),
+  })
+}
+
+export function useAddSchoolSchedule() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...data }: SchoolScheduleInput & { id: string }) =>
+      api.post(`/schools/${id}/schedules`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['schools'] }),
+  })
+}
+
+export function useRemoveSchoolSchedule() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, scheduleId }: { id: string; scheduleId: string }) =>
+      api.delete(`/schools/${id}/schedules/${scheduleId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['schools'] }),
+  })
+}
+
+export function useAddSchoolContact() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...data }: SchoolContactInput & { id: string }) =>
+      api.post(`/schools/${id}/contacts`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['schools'] }),
+  })
+}
+
+export function useRemoveSchoolContact() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, contactId }: { id: string; contactId: string }) =>
+      api.delete(`/schools/${id}/contacts/${contactId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['schools'] }),
   })
 }

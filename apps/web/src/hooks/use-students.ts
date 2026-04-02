@@ -44,6 +44,19 @@ export interface StudentUpsertInput {
   status?: 'active' | 'inactive'
 }
 
+export interface StudentGuardianInput {
+  name: string
+  phone: string
+  email?: string
+  is_primary?: boolean
+}
+
+export interface StudentAddressInput {
+  address: string
+  lat: number
+  lng: number
+}
+
 function mapStudent(student: StudentApi): Student {
   return {
     id: student.id,
@@ -113,6 +126,42 @@ export function useDeleteStudent() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => api.delete(`/students/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['students'] }),
+  })
+}
+
+export function useAddStudentGuardian() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...data }: StudentGuardianInput & { id: string }) =>
+      api.post(`/students/${id}/guardians`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['students'] }),
+  })
+}
+
+export function useRemoveStudentGuardian() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, guardianId }: { id: string; guardianId: string }) =>
+      api.delete(`/students/${id}/guardians/${guardianId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['students'] }),
+  })
+}
+
+export function useAddStudentAddress() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...data }: StudentAddressInput & { id: string }) =>
+      api.post(`/students/${id}/addresses`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['students'] }),
+  })
+}
+
+export function useRemoveStudentAddress() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, addressId }: { id: string; addressId: string }) =>
+      api.delete(`/students/${id}/addresses/${addressId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['students'] }),
   })
 }

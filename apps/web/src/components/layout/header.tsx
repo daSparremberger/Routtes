@@ -2,8 +2,8 @@
 
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
-import { Search, MessageCircle, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
-import { useState } from 'react'
+import { Search, MessageCircle, ChevronDown, ChevronLeft, ChevronRight, Menu } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 interface HeaderProps {
   title?: string
@@ -20,6 +20,7 @@ interface HeaderProps {
   onSelectTenant?: (tenantId: string) => void
   chatOpen?: boolean
   onToggleChat?: () => void
+  onOpenMenu?: () => void
 }
 
 export function Header({
@@ -37,21 +38,91 @@ export function Header({
   onSelectTenant,
   chatOpen,
   onToggleChat,
+  onOpenMenu,
 }: HeaderProps) {
   const [tenantOpen, setTenantOpen] = useState(false)
+  const [displayTitle, setDisplayTitle] = useState(title ?? '')
+  const [typingActive, setTypingActive] = useState(false)
+  const timeoutRef = useRef<number | null>(null)
+  const displayedTitleRef = useRef(title ?? '')
+
+  function nextDelay(min: number, max: number) {
+    return Math.floor(Math.random() * (max - min + 1)) + min
+  }
+
+  useEffect(() => {
+    const nextTitle = title ?? ''
+    const currentTitle = displayedTitleRef.current
+
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+
+    if (nextTitle === currentTitle) {
+      setDisplayTitle(nextTitle)
+      setTypingActive(false)
+      return
+    }
+
+    let current = currentTitle
+
+    const erase = () => {
+      setTypingActive(true)
+      if (current.length > 0) {
+        current = current.slice(0, -1)
+        displayedTitleRef.current = current
+        setDisplayTitle(current)
+        timeoutRef.current = window.setTimeout(erase, nextDelay(42, 68))
+        return
+      }
+
+      let index = 0
+      const type = () => {
+        index += 1
+        const partial = nextTitle.slice(0, index)
+        displayedTitleRef.current = partial
+        setDisplayTitle(partial)
+        if (index < nextTitle.length) {
+          timeoutRef.current = window.setTimeout(type, nextDelay(65, 110))
+        } else {
+          setTypingActive(false)
+        }
+      }
+
+      timeoutRef.current = window.setTimeout(type, 260)
+    }
+
+    timeoutRef.current = window.setTimeout(erase, 120)
+
+    return () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
+      }
+    }
+  }, [title])
 
   return (
     <header
       className={cn(
-        'relative z-10 flex h-[72px] shrink-0 items-center gap-3 border-b border-white/5 bg-shell-900 px-5',
+        'relative z-10 flex shrink-0 flex-wrap items-center gap-3 bg-shell-900 px-4 py-3 lg:h-[72px] lg:flex-nowrap lg:px-5 lg:py-0',
         className,
       )}
     >
       <button
+        onClick={onOpenMenu}
+        className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-white/[0.05] text-ink-primary transition hover:bg-white/[0.08] lg:hidden"
+        type="button"
+        aria-label="Abrir menu"
+      >
+        <Menu size={18} />
+      </button>
+      <button
         onClick={onBack}
         disabled={!canGoBack}
         className={cn(
-          'flex h-11 w-7 items-center justify-center transition-all duration-200',
+          'hidden h-11 w-7 items-center justify-center transition-all duration-200 lg:flex',
           canGoBack ? 'text-ink-muted hover:text-ink-primary' : 'cursor-not-allowed text-white/20',
         )}
       >
@@ -61,7 +132,7 @@ export function Header({
         onClick={onForward}
         disabled={!canGoForward}
         className={cn(
-          'flex h-11 w-7 items-center justify-center transition-all duration-200',
+          'hidden h-11 w-7 items-center justify-center transition-all duration-200 lg:flex',
           canGoForward ? 'text-ink-muted hover:text-ink-primary' : 'cursor-not-allowed text-white/20',
         )}
       >
@@ -69,16 +140,19 @@ export function Header({
       </button>
 
       {title && (
-        <div className="min-w-fit pr-2">
-          <h1 className="text-[24px] leading-none font-semibold tracking-[-0.03em] text-ink-primary">
-            {title}
+        <div className="min-w-0 flex-1 pr-2 lg:min-w-fit lg:flex-none">
+          <h1 className="flex items-center text-[20px] leading-none font-semibold tracking-[-0.03em] text-ink-primary lg:text-[24px]">
+            <span>{displayTitle}</span>
+            {typingActive ? (
+              <span className="ml-1 inline-block h-[24px] w-[2px] animate-pulse rounded-full bg-ink-primary/80" />
+            ) : null}
           </h1>
         </div>
       )}
 
-      <div className="flex-1" />
+      <div className="hidden flex-1 lg:block" />
 
-      <div className="flex h-11 w-[280px] items-center gap-3 rounded-[16px] border border-white/[0.06] bg-white/5 px-4 text-ink-muted transition-all duration-200 focus-within:border-white/12 focus-within:bg-white/[0.06]">
+      <div className="order-3 flex h-11 w-full items-center gap-3 rounded-[16px] border border-white/[0.06] bg-white/5 px-4 text-ink-muted transition-all duration-200 focus-within:border-white/12 focus-within:bg-white/[0.06] lg:order-none lg:w-[280px]">
         <Search size={16} />
         <input
           value={search ?? ''}
@@ -101,7 +175,7 @@ export function Header({
       <div className="relative">
         <button
           onClick={() => setTenantOpen((current) => !current)}
-          className="flex h-11 min-w-[220px] items-center justify-between gap-3 px-1 text-sm text-ink-primary transition-all duration-200 hover:text-white"
+          className="flex h-11 min-w-0 max-w-[180px] items-center justify-between gap-3 px-1 text-sm text-ink-primary transition-all duration-200 hover:text-white sm:max-w-[220px] sm:min-w-[220px]"
         >
           <span className="truncate">{activeTenant?.name ?? 'Selecionar tenant'}</span>
           <ChevronDown size={16} className={cn('transition-transform', tenantOpen && 'rotate-180')} />
@@ -132,7 +206,7 @@ export function Header({
         )}
       </div>
 
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="order-4 flex w-full items-center justify-end gap-2 lg:order-none lg:w-auto">{actions}</div>}
     </header>
   )
 }
