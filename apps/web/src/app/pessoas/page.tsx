@@ -12,7 +12,7 @@ import { useSchools } from '@/hooks/use-schools'
 import {
   useCreateStudent,
   useDeleteStudent,
-  useStudents,
+  useStudentsList,
   useUpdateStudent,
   type Student,
   type StudentUpsertInput,
@@ -20,7 +20,7 @@ import {
 import {
   useCreateDriver,
   useDeleteDriver,
-  useDrivers,
+  useDriversList,
   useUpdateDriver,
   type Driver,
   type DriverUpsertInput,
@@ -199,8 +199,8 @@ export default function PessoasPage() {
   const [driverModalOpen, setDriverModalOpen] = useState(false)
   const [driverFormError, setDriverFormError] = useState<string | null>(null)
 
-  const students = useStudents({ enabled: activeTab === 'students' })
-  const drivers = useDrivers({ enabled: activeTab === 'drivers' })
+  const studentsList = useStudentsList({ enabled: activeTab === 'students' })
+  const driversList = useDriversList({ enabled: activeTab === 'drivers' })
   const schools = useSchools()
   const createStudent = useCreateStudent()
   const updateStudent = useUpdateStudent()
@@ -209,8 +209,14 @@ export default function PessoasPage() {
   const updateDriver = useUpdateDriver()
   const deleteDriver = useDeleteDriver()
 
-  const studentItems = useMemo(() => (students.data ?? []).map(toStudentItem), [students.data])
-  const driverItems = useMemo(() => (drivers.data ?? []).map(toDriverItem), [drivers.data])
+  const studentItems = useMemo(
+    () => (studentsList.data?.pages.flatMap((p) => p.data) ?? []).map(toStudentItem),
+    [studentsList.data],
+  )
+  const driverItems = useMemo(
+    () => (driversList.data?.pages.flatMap((p) => p.data) ?? []).map(toDriverItem),
+    [driversList.data],
+  )
 
   const tabs = [
     { id: 'students', label: 'Alunos', icon: <School size={16} />, badge: studentItems.length },
@@ -305,7 +311,10 @@ export default function PessoasPage() {
       {activeTab === 'students' ? (
         <MasterDetail
           items={studentItems}
-          isLoading={students.isLoading}
+          isLoading={studentsList.isLoading}
+          onLoadMore={() => studentsList.fetchNextPage()}
+          hasMore={studentsList.hasNextPage ?? false}
+          isFetchingMore={studentsList.isFetchingNextPage}
           search={search}
           titleContent={
             <Tabs
@@ -351,7 +360,10 @@ export default function PessoasPage() {
       ) : (
         <MasterDetail
           items={driverItems}
-          isLoading={drivers.isLoading}
+          isLoading={driversList.isLoading}
+          onLoadMore={() => driversList.fetchNextPage()}
+          hasMore={driversList.hasNextPage ?? false}
+          isFetchingMore={driversList.isFetchingNextPage}
           search={search}
           titleContent={
             <Tabs

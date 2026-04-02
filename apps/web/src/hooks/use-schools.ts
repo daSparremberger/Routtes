@@ -161,17 +161,19 @@ export function useRemoveSchoolContact() {
   })
 }
 
-export function useSchoolsList() {
+export function useSchoolsList(options?: { enabled?: boolean }) {
+  const { enabled = true } = options ?? {}
   return useInfiniteQuery<PaginatedResponse<School>>({
     queryKey: ['schools-list'],
     queryFn: async ({ pageParam }) => {
       const page = pageParam as number
-      const raw = await api.get<{ data: SchoolApi[]; total: number; page: number; limit: number; hasMore: boolean }>(
+      const raw = await api.get<PaginatedResponse<SchoolApi>>(
         `/schools/paginated?page=${page}&limit=20`,
       )
       return { ...raw, data: raw.data.map(mapSchool) }
     },
     getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.page + 1 : undefined,
     initialPageParam: 1,
+    enabled,
   })
 }

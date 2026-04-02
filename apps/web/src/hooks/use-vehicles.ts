@@ -91,17 +91,19 @@ export function useDeleteVehicle() {
   })
 }
 
-export function useVehiclesList() {
+export function useVehiclesList(options?: { enabled?: boolean }) {
+  const { enabled = true } = options ?? {}
   return useInfiniteQuery<PaginatedResponse<Vehicle>>({
     queryKey: ['vehicles-list'],
     queryFn: async ({ pageParam }) => {
       const page = pageParam as number
-      const raw = await api.get<{ data: VehicleApi[]; total: number; page: number; limit: number; hasMore: boolean }>(
+      const raw = await api.get<PaginatedResponse<VehicleApi>>(
         `/vehicles/paginated?page=${page}&limit=20`,
       )
       return { ...raw, data: raw.data.map(mapVehicle) }
     },
     getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.page + 1 : undefined,
     initialPageParam: 1,
+    enabled,
   })
 }

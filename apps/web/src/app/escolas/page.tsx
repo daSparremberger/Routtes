@@ -14,7 +14,7 @@ import {
   useDeleteSchool,
   useRemoveSchoolContact,
   useRemoveSchoolSchedule,
-  useSchools,
+  useSchoolsList,
   useUpdateSchool,
   type School,
   type SchoolContactInput,
@@ -173,7 +173,7 @@ export default function EscolasPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
-  const { data, isLoading } = useSchools()
+  const schoolsList = useSchoolsList()
   const createSchool = useCreateSchool()
   const updateSchool = useUpdateSchool()
   const deleteSchool = useDeleteSchool()
@@ -181,7 +181,10 @@ export default function EscolasPage() {
   const removeSchedule = useRemoveSchoolSchedule()
   const addContact = useAddSchoolContact()
   const removeContact = useRemoveSchoolContact()
-  const items = useMemo(() => (data ?? []).map(toItem), [data])
+  const items = useMemo(
+    () => (schoolsList.data?.pages.flatMap((p) => p.data) ?? []).map(toItem),
+    [schoolsList.data],
+  )
 
   function openCreate() {
     setEditing(null)
@@ -306,7 +309,10 @@ export default function EscolasPage() {
     <>
       <MasterDetail
         items={items}
-        isLoading={isLoading}
+        isLoading={schoolsList.isLoading}
+        onLoadMore={() => schoolsList.fetchNextPage()}
+        hasMore={schoolsList.hasNextPage ?? false}
+        isFetchingMore={schoolsList.isFetchingNextPage}
         search={search}
         headerDescription="Adicione as escolas atendidas pela operacao e mantenha pontos de servico, localizacao e contatos sempre atualizados."
         newLabel="Nova escola"

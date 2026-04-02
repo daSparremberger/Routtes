@@ -101,20 +101,21 @@ export function useDeleteRoute() {
   })
 }
 
-export function useRoutesList(options?: { shift?: string }) {
-  const { shift } = options ?? {}
+export function useRoutesList(options?: { shift?: string; enabled?: boolean }) {
+  const { shift, enabled = true } = options ?? {}
   return useInfiniteQuery<PaginatedResponse<Route>>({
     queryKey: ['routes-list', shift],
     queryFn: async ({ pageParam }) => {
       const page = pageParam as number
       const params = new URLSearchParams({ page: String(page), limit: '20' })
       if (shift) params.set('shift', shift)
-      const raw = await api.get<{ data: RouteApi[]; total: number; page: number; limit: number; hasMore: boolean }>(
+      const raw = await api.get<PaginatedResponse<RouteApi>>(
         `/routes/paginated?${params}`,
       )
       return { ...raw, data: raw.data.map(mapRoute) }
     },
     getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.page + 1 : undefined,
     initialPageParam: 1,
+    enabled,
   })
 }

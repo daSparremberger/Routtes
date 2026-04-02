@@ -177,7 +177,7 @@ export function useStudentsList(options?: { schoolId?: string; enabled?: boolean
       const page = pageParam as number
       const params = new URLSearchParams({ page: String(page), limit: '20' })
       if (schoolId) params.set('schoolId', schoolId)
-      const raw = await api.get<{ data: StudentApi[]; total: number; page: number; limit: number; hasMore: boolean }>(
+      const raw = await api.get<PaginatedResponse<StudentApi>>(
         `/students/paginated?${params}`,
       )
       return { ...raw, data: raw.data.map(mapStudent) }

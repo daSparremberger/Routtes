@@ -9,7 +9,7 @@ import { ApiError } from '@/lib/api'
 import {
   useCreateRoute,
   useDeleteRoute,
-  useRoutes,
+  useRoutesList,
   useUpdateRoute,
   type Route,
   type RouteUpsertInput,
@@ -62,7 +62,7 @@ export default function RotasPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
-  const routes = useRoutes()
+  const routesList = useRoutesList()
   const drivers = useDrivers({})
   const vehicles = useVehicles()
   const createRoute = useCreateRoute()
@@ -80,7 +80,7 @@ export default function RotasPage() {
 
   const items = useMemo<RouteItem[]>(
     () =>
-      (routes.data ?? []).map((route) => ({
+      (routesList.data?.pages.flatMap((p) => p.data) ?? []).map((route) => ({
         id: route.id,
         title: route.name,
         subtitle: `${route.studentsCount ?? 0} parada${route.studentsCount === 1 ? '' : 's'}`,
@@ -88,7 +88,7 @@ export default function RotasPage() {
         badgeVariant: route.status === 'approved' ? 'active' : route.status === 'inactive' ? 'default' : 'warn',
         _raw: route,
       })),
-    [routes.data],
+    [routesList.data],
   )
 
   function openCreate() {
@@ -140,7 +140,10 @@ export default function RotasPage() {
     <>
       <MasterDetail
         items={items}
-        isLoading={routes.isLoading}
+        isLoading={routesList.isLoading}
+        onLoadMore={() => routesList.fetchNextPage()}
+        hasMore={routesList.hasNextPage ?? false}
+        isFetchingMore={routesList.isFetchingNextPage}
         search={search}
         headerDescription="Monte as rotas da operacao com motorista, veiculo, turno e tipo de atendimento para organizar a execucao do dia."
         newLabel="Nova rota"

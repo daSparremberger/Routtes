@@ -99,7 +99,7 @@ export function useDriversList(options?: { enabled?: boolean }) {
     queryKey: ['drivers-list'],
     queryFn: async ({ pageParam }) => {
       const page = pageParam as number
-      const raw = await api.get<{ data: DriverApi[]; total: number; page: number; limit: number; hasMore: boolean }>(
+      const raw = await api.get<PaginatedResponse<DriverApi>>(
         `/drivers/paginated?page=${page}&limit=20`,
       )
       return { ...raw, data: raw.data.map(mapDriver) }

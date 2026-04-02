@@ -11,7 +11,7 @@ import {
   useCreateVehicle,
   useDeleteVehicle,
   useUpdateVehicle,
-  useVehicles,
+  useVehiclesList,
   type Vehicle,
   type VehicleUpsertInput,
 } from '@/hooks/use-vehicles'
@@ -82,11 +82,14 @@ export default function VeiculosPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
-  const { data, isLoading } = useVehicles()
+  const vehiclesList = useVehiclesList()
   const createVehicle = useCreateVehicle()
   const updateVehicle = useUpdateVehicle()
   const deleteVehicle = useDeleteVehicle()
-  const items = useMemo(() => (data ?? []).map(toItem), [data])
+  const items = useMemo(
+    () => (vehiclesList.data?.pages.flatMap((p) => p.data) ?? []).map(toItem),
+    [vehiclesList.data],
+  )
 
   function openCreate() {
     setEditing(null)
@@ -131,7 +134,10 @@ export default function VeiculosPage() {
     <>
       <MasterDetail
         items={items}
-        isLoading={isLoading}
+        isLoading={vehiclesList.isLoading}
+        onLoadMore={() => vehiclesList.fetchNextPage()}
+        hasMore={vehiclesList.hasNextPage ?? false}
+        isFetchingMore={vehiclesList.isFetchingNextPage}
         search={search}
         headerDescription="Registre os veiculos da frota com placa, capacidade, modelo e identificadores usados na operacao."
         newLabel="Novo veiculo"
