@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
+import { PaginatedResponse, paginate } from '../../shared/dto/paginate.dto';
 
 @Injectable()
 export class VehiclesService {
@@ -56,6 +57,16 @@ export class VehiclesService {
       },
       orderBy: { plate: 'asc' },
     });
+  }
+
+  async findAllPaginated(tenantId: string, page = 1, limit = 20): Promise<PaginatedResponse<any>> {
+    const where = { tenant_id: tenantId };
+    const { skip, take } = paginate(page, limit);
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.vehicles.findMany({ where, orderBy: { plate: 'asc' }, skip, take }),
+      this.prisma.vehicles.count({ where }),
+    ]);
+    return { data, total, page, limit, hasMore: page * limit < total };
   }
 
   async findOne(tenantId: string, id: string) {

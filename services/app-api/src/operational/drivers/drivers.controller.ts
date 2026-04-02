@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Res } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../../auth/guards/tenant.guard';
@@ -8,6 +8,7 @@ import { JwtPayload } from '@routtes/shared';
 import { DriversService } from './drivers.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
+import { PaginateDto } from '../../shared/dto/paginate.dto';
 
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('drivers')
@@ -30,6 +31,11 @@ export class DriversController {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="drivers.csv"');
     res.send(csv);
+  }
+
+  @Get('paginated')
+  findAllPaginated(@TenantId() tenantId: string, @Query() query: PaginateDto) {
+    return this.driversService.findAllPaginated(tenantId, query.page, query.limit);
   }
 
   @Get(':id')

@@ -6,6 +6,7 @@ import { UpdateStudentDto } from './dto/update-student.dto';
 import { CreateGuardianDto } from './dto/create-guardian.dto';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { shift_type, user_status } from '../../generated/prisma';
+import { PaginatedResponse, paginate } from '../../shared/dto/paginate.dto';
 
 @Injectable()
 export class StudentsService {
@@ -41,6 +42,35 @@ export class StudentsService {
       },
       orderBy: { name: 'asc' },
     });
+  }
+
+  async findAllPaginated(
+    tenantId: string,
+    filters: { schoolId?: string },
+    page = 1,
+    limit = 20,
+  ): Promise<PaginatedResponse<any>> {
+    const where = {
+      tenant_id: tenantId,
+      status: 'active' as user_status,
+      ...(filters.schoolId ? { school_id: filters.schoolId } : {}),
+    };
+    const { skip, take } = paginate(page, limit);
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.students.findMany({
+        where,
+        include: {
+          student_guardians: true,
+          student_addresses: true,
+          schools: { select: { name: true } },
+        },
+        orderBy: { name: 'asc' },
+        skip,
+        take,
+      }),
+      this.prisma.students.count({ where }),
+    ]);
+    return { data, total, page, limit, hasMore: page * limit < total };
   }
 
   async findOne(tenantId: string, id: string) {

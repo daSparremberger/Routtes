@@ -5,6 +5,7 @@ import { user_role, user_status, invite_role } from '../../generated/prisma';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
+import { PaginatedResponse, paginate } from '../../shared/dto/paginate.dto';
 
 @Injectable()
 export class DriversService {
@@ -42,6 +43,22 @@ export class DriversService {
       include: { driver_profiles: true },
       orderBy: { name: 'asc' },
     });
+  }
+
+  async findAllPaginated(tenantId: string, page = 1, limit = 20): Promise<PaginatedResponse<any>> {
+    const where = { tenant_id: tenantId, role: 'driver' as user_role };
+    const { skip, take } = paginate(page, limit);
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.users.findMany({
+        where,
+        include: { driver_profiles: true },
+        orderBy: { name: 'asc' },
+        skip,
+        take,
+      }),
+      this.prisma.users.count({ where }),
+    ]);
+    return { data, total, page, limit, hasMore: page * limit < total };
   }
 
   async findOne(tenantId: string, id: string) {

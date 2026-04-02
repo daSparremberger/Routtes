@@ -5,6 +5,7 @@ import { MapboxService, OptimizationCriteria } from './mapbox/mapbox.service';
 import { CreateRouteDto } from './dto/create-route.dto';
 import { UpdateRouteDto } from './dto/update-route.dto';
 import { CreateStopDto } from './dto/create-stop.dto';
+import { PaginatedResponse, paginate } from '../../shared/dto/paginate.dto';
 
 @Injectable()
 export class RoutesService {
@@ -38,6 +39,25 @@ export class RoutesService {
       },
       orderBy: { name: 'asc' },
     });
+  }
+
+  async findAllPaginated(tenantId: string, shift?: string, page = 1, limit = 20): Promise<PaginatedResponse<any>> {
+    const where = {
+      tenant_id: tenantId,
+      ...(shift ? { shift: shift as shift_type } : {}),
+    };
+    const { skip, take } = paginate(page, limit);
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.routes.findMany({
+        where,
+        include: { route_stops: { orderBy: { order: 'asc' } } },
+        orderBy: { name: 'asc' },
+        skip,
+        take,
+      }),
+      this.prisma.routes.count({ where }),
+    ]);
+    return { data, total, page, limit, hasMore: page * limit < total };
   }
 
   async findOne(tenantId: string, id: string) {

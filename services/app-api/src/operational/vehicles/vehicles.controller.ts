@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, UseGuards,
+  Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../../auth/guards/tenant.guard';
@@ -8,6 +8,7 @@ import { VehiclesService } from './vehicles.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { AssignDriverDto } from './dto/assign-driver.dto';
+import { PaginateDto } from '../../shared/dto/paginate.dto';
 
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('vehicles')
@@ -22,6 +23,11 @@ export class VehiclesController {
   @Get()
   findAll(@TenantId() tenantId: string) {
     return this.vehiclesService.findAll(tenantId);
+  }
+
+  @Get('paginated')
+  findAllPaginated(@TenantId() tenantId: string, @Query() query: PaginateDto) {
+    return this.vehiclesService.findAllPaginated(tenantId, query.page, query.limit);
   }
 
   @Get(':id')

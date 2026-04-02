@@ -5,6 +5,7 @@ import { UpdateSchoolDto } from './dto/update-school.dto';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { school_type, shift_type, user_status } from '../../generated/prisma';
+import { PaginatedResponse, paginate } from '../../shared/dto/paginate.dto';
 
 function parseTime(hhmm: string): Date {
   const [hours, minutes] = hhmm.split(':').map(Number);
@@ -37,6 +38,25 @@ export class SchoolsService {
       include: { school_schedules: true, school_contacts: true },
       orderBy: { name: 'asc' },
     });
+  }
+
+  async findAllPaginated(tenantId: string, page = 1, limit = 20): Promise<PaginatedResponse<any>> {
+    const where = { tenant_id: tenantId, status: 'active' as any };
+    const { skip, take } = paginate(page, limit);
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.schools.findMany({
+        where,
+        include: {
+          school_schedules: true,
+          school_contacts: true,
+        },
+        orderBy: { name: 'asc' },
+        skip,
+        take,
+      }),
+      this.prisma.schools.count({ where }),
+    ]);
+    return { data, total, page, limit, hasMore: page * limit < total };
   }
 
   async findOne(tenantId: string, id: string) {
