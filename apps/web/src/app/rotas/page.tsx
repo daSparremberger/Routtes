@@ -63,7 +63,7 @@ export default function RotasPage() {
   const [formError, setFormError] = useState<string | null>(null)
 
   const routes = useRoutes()
-  const drivers = useDrivers()
+  const drivers = useDrivers({})
   const vehicles = useVehicles()
   const createRoute = useCreateRoute()
   const updateRoute = useUpdateRoute()
