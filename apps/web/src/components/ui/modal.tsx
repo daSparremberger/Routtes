@@ -65,7 +65,7 @@ export function Modal({
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className={cn(
-              "relative z-50 w-full max-w-lg rounded-xl bg-surface-card p-6 shadow-modal flex flex-col gap-4",
+              "relative z-50 flex max-h-[84vh] w-full max-w-lg flex-col gap-4 overflow-hidden rounded-xl bg-surface-card p-6 shadow-modal",
               className
             )}
             role="dialog"
@@ -88,7 +88,7 @@ export function Modal({
                 )}
               </div>
             )}
-            <div className="flex flex-col gap-4 w-full">
+            <div className="flex min-h-0 w-full flex-col gap-4">
               {children}
             </div>
           </motion.div>

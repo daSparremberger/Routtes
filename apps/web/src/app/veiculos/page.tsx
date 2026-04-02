@@ -1,7 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Shell } from '@/components/layout/shell'
+import { Car, Hash, Truck, Users } from 'lucide-react'
+import { useShellConfig } from '@/components/layout/shell-context'
 import { DetailRow, MasterDetail, type MasterItem } from '@/components/master-detail'
 import { EntityFormModal } from '@/components/entity-form-modal'
 import { Input, Select } from '@/components/ui'
@@ -14,7 +15,6 @@ import {
   type Vehicle,
   type VehicleUpsertInput,
 } from '@/hooks/use-vehicles'
-import { Car, Hash, Truck, Users } from 'lucide-react'
 
 interface VehicleItem extends MasterItem {
   _raw: Vehicle
@@ -71,11 +71,12 @@ function toPayload(form: VehicleFormState): VehicleUpsertInput {
 function getErrorMessage(error: unknown) {
   if (error instanceof ApiError) return error.message
   if (error instanceof Error) return error.message
-  return 'Não foi possível salvar o veículo.'
+  return 'Nao foi possivel salvar o veiculo.'
 }
 
 export default function VeiculosPage() {
   const [search, setSearch] = useState('')
+  useShellConfig({ title: 'Veiculos', searchValue: search, onSearchChange: setSearch })
   const [form, setForm] = useState<VehicleFormState>(EMPTY_FORM)
   const [editing, setEditing] = useState<Vehicle | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
@@ -103,7 +104,7 @@ export default function VeiculosPage() {
 
   async function handleSubmit() {
     if (!form.plate.trim() || !form.capacity || Number(form.capacity) <= 0) {
-      setFormError('Placa e capacidade válida são obrigatórias.')
+      setFormError('Placa e capacidade valida sao obrigatorias.')
       return
     }
 
@@ -122,19 +123,19 @@ export default function VeiculosPage() {
   }
 
   async function handleDelete(vehicle: Vehicle) {
-    if (!window.confirm(`Arquivar o veículo "${vehicle.licensePlate}"?`)) return
+    if (!window.confirm(`Arquivar o veiculo "${vehicle.licensePlate}"?`)) return
     await deleteVehicle.mutateAsync(vehicle.id)
   }
 
   return (
-    <Shell title="Veículos" searchValue={search} onSearchChange={setSearch}>
+    <>
       <MasterDetail
         items={items}
         isLoading={isLoading}
         search={search}
-        pageTitle="Veículos"
-        newLabel="Novo veículo"
-        emptyText="Nenhum veículo cadastrado."
+        headerDescription="Registre os veiculos da frota com placa, capacidade, modelo e identificadores usados na operacao."
+        newLabel="Novo veiculo"
+        emptyText="Nenhum veiculo cadastrado."
         onNew={openCreate}
         onEdit={(item) => openEdit(item._raw)}
         onDelete={(item) => handleDelete(item._raw)}
@@ -154,24 +155,60 @@ export default function VeiculosPage() {
       <EntityFormModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editing ? 'Editar veículo' : 'Novo veículo'}
-        description="Os campos usam os nomes exigidos pelo DTO da API."
+        title={editing ? 'Editar veiculo' : 'Novo veiculo'}
+        description="Cadastro compacto com os campos principais da frota."
         onSubmit={handleSubmit}
         submitting={createVehicle.isPending || updateVehicle.isPending}
-        submitLabel={editing ? 'Salvar alterações' : 'Criar veículo'}
+        submitLabel={editing ? 'Salvar alteracoes' : 'Criar veiculo'}
         error={formError}
+        modalClassName="max-w-2xl h-[72vh]"
+        contentClassName="space-y-5"
+        footerClassName="flex justify-end gap-3 border-t border-white/[0.06] pt-4"
       >
-        <div className="grid gap-4 md:grid-cols-2">
-          <Input label="Placa" value={form.plate} onChange={(e) => setForm((current) => ({ ...current, plate: e.target.value.toUpperCase() }))} required />
-          <Input label="Capacidade" type="number" value={form.capacity} onChange={(e) => setForm((current) => ({ ...current, capacity: e.target.value }))} required />
-          <Input label="Modelo" value={form.model} onChange={(e) => setForm((current) => ({ ...current, model: e.target.value }))} />
-          <Input label="Totem ID" value={form.totem_id} onChange={(e) => setForm((current) => ({ ...current, totem_id: e.target.value }))} />
-          <Select label="Status" value={form.status} onChange={(e) => setForm((current) => ({ ...current, status: e.target.value as VehicleFormState['status'] }))}>
-            <option value="active">Ativo</option>
-            <option value="inactive">Inativo</option>
-          </Select>
-        </div>
+        <section className="space-y-3">
+          <div>
+            <p className="text-sm font-semibold text-ink-primary">Dados do veiculo</p>
+            <p className="mt-1 text-xs text-ink-muted">Estrutura inspirada no modal de referencia, com campos curtos e agrupados.</p>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <Input
+              label="Placa"
+              value={form.plate}
+              onChange={(e) => setForm((current) => ({ ...current, plate: e.target.value.toUpperCase() }))}
+              required
+            />
+            <Input
+              label="Modelo"
+              value={form.model}
+              onChange={(e) => setForm((current) => ({ ...current, model: e.target.value }))}
+            />
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            <Input
+              label="Capacidade"
+              type="number"
+              value={form.capacity}
+              onChange={(e) => setForm((current) => ({ ...current, capacity: e.target.value }))}
+              required
+            />
+            <Input
+              label="Totem ID"
+              value={form.totem_id}
+              onChange={(e) => setForm((current) => ({ ...current, totem_id: e.target.value }))}
+            />
+            <Select
+              label="Status"
+              value={form.status}
+              onChange={(e) => setForm((current) => ({ ...current, status: e.target.value as VehicleFormState['status'] }))}
+            >
+              <option value="active">Ativo</option>
+              <option value="inactive">Inativo</option>
+            </Select>
+          </div>
+        </section>
       </EntityFormModal>
-    </Shell>
+    </>
   )
 }

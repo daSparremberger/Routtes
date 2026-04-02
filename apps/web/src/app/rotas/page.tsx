@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Shell } from '@/components/layout/shell'
+import { useShellConfig } from '@/components/layout/shell-context'
 import { DetailRow, MasterDetail, type MasterItem } from '@/components/master-detail'
 import { EntityFormModal } from '@/components/entity-form-modal'
 import { Input, Select } from '@/components/ui'
@@ -56,6 +56,7 @@ function toPayload(form: RouteFormState): RouteUpsertInput {
 
 export default function RotasPage() {
   const [search, setSearch] = useState('')
+  useShellConfig({ title: 'Rotas', searchValue: search, onSearchChange: setSearch })
   const [form, setForm] = useState<RouteFormState>(EMPTY_FORM)
   const [editing, setEditing] = useState<Route | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
@@ -136,12 +137,12 @@ export default function RotasPage() {
   }
 
   return (
-    <Shell title="Rotas" searchValue={search} onSearchChange={setSearch}>
+    <>
       <MasterDetail
         items={items}
         isLoading={routes.isLoading}
         search={search}
-        pageTitle="Rotas"
+        headerDescription="Monte as rotas da operacao com motorista, veiculo, turno e tipo de atendimento para organizar a execucao do dia."
         newLabel="Nova rota"
         emptyText="Nenhuma rota cadastrada."
         onNew={openCreate}
@@ -202,7 +203,7 @@ export default function RotasPage() {
           </Select>
         </div>
       </EntityFormModal>
-    </Shell>
+    </>
   )
 }
 

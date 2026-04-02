@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
+import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface MasterItem {
@@ -19,6 +20,9 @@ interface MasterDetailProps<T extends MasterItem> {
   searchKeys?: (keyof T)[]
   renderDetail: (item: T) => ReactNode
   pageTitle?: string
+  titleContent?: ReactNode
+  headerDescription?: ReactNode
+  headerActions?: ReactNode
   onNew?: () => void
   onEdit?: (item: T) => void
   onDelete?: (item: T) => void
@@ -40,6 +44,9 @@ export function MasterDetail<T extends MasterItem>({
   searchKeys = ['title', 'subtitle'] as (keyof T)[],
   renderDetail,
   pageTitle,
+  titleContent,
+  headerDescription,
+  headerActions,
   onNew,
   onEdit,
   onDelete,
@@ -70,30 +77,35 @@ export function MasterDetail<T extends MasterItem>({
 
   return (
     <div className="grid h-full min-h-0 grid-cols-1 gap-5 xl:grid-cols-12">
-      <div className="flex min-h-[520px] flex-col rounded-[28px] border border-white/6 bg-shell-600 p-4 xl:col-span-7">
-        <div className="mb-3 flex items-center justify-between border-b border-white/5 px-2 pb-4">
-          <div>
-            <p className="text-sm text-[#f7f1e4]/55">Lista principal</p>
-            {pageTitle ? <h2 className="text-xl font-semibold text-ink-primary">{pageTitle}</h2> : null}
+      <div className="flex min-h-[420px] flex-col p-0 sm:p-2 xl:col-span-7">
+        <div className="mb-4 flex flex-col gap-4 border-b border-white/5 px-1 pb-4 sm:px-2 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            {titleContent ? titleContent : null}
+            {!titleContent && pageTitle ? <h2 className="text-xl font-semibold text-ink-primary">{pageTitle}</h2> : null}
+            {headerDescription ? <p className="mt-2 max-w-[620px] text-base text-ink-primary">{headerDescription}</p> : null}
           </div>
-          {onNew ? (
-            <button
-              onClick={onNew}
-              className="h-10 rounded-[14px] bg-white/6 px-4 text-sm text-ink-primary transition hover:bg-white/9"
-              type="button"
-            >
-              {newLabel}
-            </button>
-          ) : null}
+          <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+            {onNew ? (
+              <button
+                onClick={onNew}
+                className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-[16px] bg-brand-500 px-5 font-medium text-ink-inverted transition-colors hover:bg-brand-600"
+                type="button"
+              >
+                <Plus size={16} strokeWidth={2.2} />
+                {newLabel}
+              </button>
+            ) : null}
+            {headerActions}
+          </div>
         </div>
 
-        <div className="flex-1 space-y-2 overflow-auto pr-1">
+        <div className="flex-1 space-y-1 overflow-auto pr-1">
           {isLoading ? (
             Array.from({ length: 5 }).map((_, index) => (
               <div key={index} className="skeleton h-[72px] rounded-[22px]" />
             ))
           ) : filtered.length === 0 ? (
-            <div className="flex h-32 items-center justify-center rounded-[22px] border border-dashed border-white/10 text-sm text-ink-muted">
+            <div className="flex h-32 items-center justify-center rounded-[22px] text-sm text-ink-muted">
               {emptyText}
             </div>
           ) : (
@@ -105,8 +117,8 @@ export function MasterDetail<T extends MasterItem>({
                   whileHover={{ scale: 1.005, y: -1 }}
                   onClick={() => setSelectedId(item.id)}
                   className={cn(
-                    'w-full rounded-[22px] border p-4 text-left transition-all duration-200',
-                    active ? 'border-white/10 bg-white/10' : 'border-white/5 bg-white/[0.03] hover:bg-white/[0.05]',
+                    'w-full rounded-[22px] p-4 text-left transition-all duration-200',
+                    active ? 'bg-white/[0.08]' : 'hover:bg-white/[0.04]',
                   )}
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -132,7 +144,7 @@ export function MasterDetail<T extends MasterItem>({
         </div>
       </div>
 
-      <div className="min-h-[520px] rounded-[28px] border border-white/6 bg-shell-600 p-5 xl:col-span-5">
+      <div className="min-h-[320px] border-t border-white/[0.05] pt-5 xl:col-span-5 xl:min-h-[520px] xl:border-l xl:border-t-0 xl:pl-6 xl:pt-0">
         <AnimatePresence mode="wait">
           {selected ? (
             <motion.div
@@ -182,7 +194,7 @@ export function MasterDetail<T extends MasterItem>({
               ) : null}
             </motion.div>
           ) : (
-            <div className="flex h-full items-center justify-center rounded-[22px] border border-dashed border-white/10 text-sm text-ink-muted">
+            <div className="flex h-full items-center justify-center rounded-[22px] text-sm text-ink-muted">
               Selecione um item para ver os detalhes.
             </div>
           )}
@@ -204,9 +216,9 @@ export function DetailRow({
   if (!value) return null
 
   return (
-    <div className="flex items-start gap-4 rounded-[20px] border border-white/5 bg-white/[0.03] p-4">
+    <div className="flex items-start gap-4 rounded-[20px] px-1 py-3">
       {icon ? (
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white/7 text-brand-500">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white/[0.05] text-brand-500">
           {icon}
         </div>
       ) : null}
