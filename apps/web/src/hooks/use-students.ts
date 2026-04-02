@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
+import type { PaginatedResponse } from '@/lib/api'
 
 interface StudentApi {
   id: string
@@ -165,5 +166,24 @@ export function useRemoveStudentAddress() {
     mutationFn: ({ id, addressId }: { id: string; addressId: string }) =>
       api.delete(`/students/${id}/addresses/${addressId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['students'] }),
+  })
+}
+
+export function useStudentsList(options?: { schoolId?: string; enabled?: boolean }) {
+  const { schoolId, enabled = true } = options ?? {}
+  return useInfiniteQuery<PaginatedResponse<Student>>({
+    queryKey: ['students-list', schoolId],
+    queryFn: async ({ pageParam }) => {
+      const page = pageParam as number
+      const params = new URLSearchParams({ page: String(page), limit: '20' })
+      if (schoolId) params.set('schoolId', schoolId)
+      const raw = await api.get<{ data: StudentApi[]; total: number; page: number; limit: number; hasMore: boolean }>(
+        `/students/paginated?${params}`,
+      )
+      return { ...raw, data: raw.data.map(mapStudent) }
+    },
+    getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.page + 1 : undefined,
+    initialPageParam: 1,
+    enabled,
   })
 }

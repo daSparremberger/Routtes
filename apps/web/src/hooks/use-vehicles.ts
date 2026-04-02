@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
+import type { PaginatedResponse } from '@/lib/api'
 
 interface VehicleApi {
   id: string
@@ -87,5 +88,20 @@ export function useDeleteVehicle() {
   return useMutation({
     mutationFn: (id: string) => api.delete(`/vehicles/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['vehicles'] }),
+  })
+}
+
+export function useVehiclesList() {
+  return useInfiniteQuery<PaginatedResponse<Vehicle>>({
+    queryKey: ['vehicles-list'],
+    queryFn: async ({ pageParam }) => {
+      const page = pageParam as number
+      const raw = await api.get<{ data: VehicleApi[]; total: number; page: number; limit: number; hasMore: boolean }>(
+        `/vehicles/paginated?page=${page}&limit=20`,
+      )
+      return { ...raw, data: raw.data.map(mapVehicle) }
+    },
+    getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.page + 1 : undefined,
+    initialPageParam: 1,
   })
 }

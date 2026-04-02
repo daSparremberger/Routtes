@@ -67,3 +67,11 @@ export async function refreshAccessToken(refreshToken: string): Promise<LoginRes
   if (!res.ok) throw new ApiError(res.status, await res.text())
   return res.json()
 }
+
+export interface PaginatedResponse<T> {
+  data: T[]
+  total: number
+  page: number
+  limit: number
+  hasMore: boolean
+}

@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
+import type { PaginatedResponse } from '@/lib/api'
 
 interface DriverApi {
   id: string
@@ -89,5 +90,22 @@ export function useDeleteDriver() {
   return useMutation({
     mutationFn: (id: string) => api.delete(`/drivers/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['drivers'] }),
+  })
+}
+
+export function useDriversList(options?: { enabled?: boolean }) {
+  const { enabled = true } = options ?? {}
+  return useInfiniteQuery<PaginatedResponse<Driver>>({
+    queryKey: ['drivers-list'],
+    queryFn: async ({ pageParam }) => {
+      const page = pageParam as number
+      const raw = await api.get<{ data: DriverApi[]; total: number; page: number; limit: number; hasMore: boolean }>(
+        `/drivers/paginated?page=${page}&limit=20`,
+      )
+      return { ...raw, data: raw.data.map(mapDriver) }
+    },
+    getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.page + 1 : undefined,
+    initialPageParam: 1,
+    enabled,
   })
 }
