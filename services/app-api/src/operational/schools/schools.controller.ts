@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../../auth/guards/tenant.guard';
 import { TenantId } from '../../auth/decorators/tenant-id.decorator';
@@ -7,6 +7,7 @@ import { CreateSchoolDto } from './dto/create-school.dto';
 import { UpdateSchoolDto } from './dto/update-school.dto';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { CreateContactDto } from './dto/create-contact.dto';
+import { PaginateDto } from '../../shared/dto/paginate.dto';
 
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('schools')
@@ -21,6 +22,11 @@ export class SchoolsController {
   @Get()
   findAll(@TenantId() tenantId: string) {
     return this.schoolsService.findAll(tenantId);
+  }
+
+  @Get('paginated')
+  findAllPaginated(@TenantId() tenantId: string, @Query() query: PaginateDto) {
+    return this.schoolsService.findAllPaginated(tenantId, query.page, query.limit);
   }
 
   @Get(':id')

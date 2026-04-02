@@ -19,6 +19,7 @@ import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { CreateGuardianDto } from './dto/create-guardian.dto';
 import { CreateAddressDto } from './dto/create-address.dto';
+import { PaginateDto } from '../../shared/dto/paginate.dto';
 
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('students')
@@ -41,6 +42,19 @@ export class StudentsController {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="students.csv"');
     res.send(csv);
+  }
+
+  @Get('paginated')
+  findAllPaginated(
+    @TenantId() tenantId: string,
+    @Query() query: PaginateDto & { schoolId?: string },
+  ) {
+    return this.studentsService.findAllPaginated(
+      tenantId,
+      { schoolId: query.schoolId },
+      query.page,
+      query.limit,
+    );
   }
 
   @Get(':id')

@@ -11,6 +11,7 @@ import { CreateRouteDto } from './dto/create-route.dto';
 import { UpdateRouteDto } from './dto/update-route.dto';
 import { CreateStopDto } from './dto/create-stop.dto';
 import { OptimizeRouteDto } from './dto/optimize-route.dto';
+import { PaginateDto } from '../../shared/dto/paginate.dto';
 
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('routes')
@@ -25,6 +26,14 @@ export class RoutesController {
   @Get()
   findAll(@TenantId() tenantId: string, @Query('shift') shift?: string) {
     return this.routesService.findAll(tenantId, shift);
+  }
+
+  @Get('paginated')
+  findAllPaginated(
+    @TenantId() tenantId: string,
+    @Query() query: PaginateDto & { shift?: string },
+  ) {
+    return this.routesService.findAllPaginated(tenantId, query.shift, query.page, query.limit);
   }
 
   @Get(':id')

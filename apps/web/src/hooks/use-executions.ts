@@ -19,6 +19,7 @@ export function useActiveExecutions() {
     queryKey: ['executions', 'active'],
     queryFn:  () => api.get<Execution[]>('/executions/active').catch(() => []),
     refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   })
 }
 

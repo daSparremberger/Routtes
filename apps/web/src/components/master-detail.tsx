@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Plus } from 'lucide-react'
+import { ArrowLeft, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface MasterItem {
@@ -28,6 +28,9 @@ interface MasterDetailProps<T extends MasterItem> {
   onDelete?: (item: T) => void
   newLabel?: string
   emptyText?: string
+  onLoadMore?: () => void
+  hasMore?: boolean
+  isFetchingMore?: boolean
 }
 
 const badgeColors = {
@@ -52,6 +55,9 @@ export function MasterDetail<T extends MasterItem>({
   onDelete,
   newLabel = 'Novo registro',
   emptyText = 'Nenhum item encontrado.',
+  onLoadMore,
+  hasMore,
+  isFetchingMore,
 }: MasterDetailProps<T>) {
   const filtered = useMemo(() => {
     if (!search?.trim()) return items
@@ -61,7 +67,26 @@ export function MasterDetail<T extends MasterItem>({
     )
   }, [items, search, searchKeys])
 
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const isFetchingMoreRef = useRef(isFetchingMore)
+  useEffect(() => { isFetchingMoreRef.current = isFetchingMore }, [isFetchingMore])
+
+  useEffect(() => {
+    if (!onLoadMore || !hasMore) return
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isFetchingMoreRef.current) onLoadMore()
+      },
+      { threshold: 0.1 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [onLoadMore, hasMore])
+
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
   const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0] ?? null
 
   useEffect(() => {
@@ -75,6 +100,11 @@ export function MasterDetail<T extends MasterItem>({
     }
   }, [filtered, selectedId])
 
+  function handleSelect(itemId: string) {
+    setSelectedId(itemId)
+    setMobileDetailOpen(true)
+  }
+
   return (
     <div className="grid h-full min-h-0 grid-cols-1 gap-5 xl:grid-cols-12">
       <div className="flex min-h-[420px] flex-col p-0 sm:p-2 xl:col-span-7">
@@ -82,13 +112,13 @@ export function MasterDetail<T extends MasterItem>({
           <div className="min-w-0">
             {titleContent ? titleContent : null}
             {!titleContent && pageTitle ? <h2 className="text-xl font-semibold text-ink-primary">{pageTitle}</h2> : null}
-            {headerDescription ? <p className="mt-2 max-w-[620px] text-base text-ink-primary">{headerDescription}</p> : null}
+            {headerDescription ? <p className="mt-2 max-w-[620px] text-sm text-ink-primary lg:text-base">{headerDescription}</p> : null}
           </div>
           <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
             {onNew ? (
               <button
                 onClick={onNew}
-                className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-[16px] bg-brand-500 px-5 font-medium text-ink-inverted transition-colors hover:bg-brand-600"
+                className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[15px] bg-brand-500 px-4 text-sm font-medium text-ink-inverted transition-colors hover:bg-brand-600 lg:h-11 lg:rounded-[16px] lg:px-5"
                 type="button"
               >
                 <Plus size={16} strokeWidth={2.2} />
@@ -115,7 +145,7 @@ export function MasterDetail<T extends MasterItem>({
                 <motion.button
                   key={item.id}
                   whileHover={{ scale: 1.005, y: -1 }}
-                  onClick={() => setSelectedId(item.id)}
+                  onClick={() => handleSelect(item.id)}
                   className={cn(
                     'w-full rounded-[22px] p-4 text-left transition-all duration-200',
                     active ? 'bg-white/[0.08]' : 'hover:bg-white/[0.04]',
@@ -141,10 +171,21 @@ export function MasterDetail<T extends MasterItem>({
               )
             })
           )}
+          {!isLoading && filtered.length > 0 ? (
+            <>
+              <div ref={sentinelRef} />
+              {isFetchingMore ? (
+                <div className="py-3 text-center text-xs text-[#f7f1e4]/40">Carregando...</div>
+              ) : null}
+              {hasMore === false ? (
+                <div className="py-4 text-center text-xs text-[#f7f1e4]/30">Fim da lista</div>
+              ) : null}
+            </>
+          ) : null}
         </div>
       </div>
 
-      <div className="min-h-[320px] border-t border-white/[0.05] pt-5 xl:col-span-5 xl:min-h-[520px] xl:border-l xl:border-t-0 xl:pl-6 xl:pt-0">
+      <div className="hidden min-h-[320px] border-t border-white/[0.05] pt-5 xl:block xl:col-span-5 xl:min-h-[520px] xl:border-l xl:border-t-0 xl:pl-6 xl:pt-0">
         <AnimatePresence mode="wait">
           {selected ? (
             <motion.div
@@ -200,6 +241,73 @@ export function MasterDetail<T extends MasterItem>({
           )}
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {mobileDetailOpen && selected ? (
+          <motion.div
+            initial={{ opacity: 0, x: 26 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 26 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-shell-700 px-4 pb-6 pt-5 xl:hidden"
+          >
+            <div className="flex h-full flex-col">
+              <div className="mb-5 flex items-center gap-3 border-b border-white/[0.05] pb-4">
+                <button
+                  type="button"
+                  onClick={() => setMobileDetailOpen(false)}
+                  className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-white/[0.05] text-ink-primary"
+                >
+                  <ArrowLeft size={18} />
+                </button>
+                <div className="min-w-0">
+                  <p className="text-xs uppercase tracking-[0.18em] text-[#f7f1e4]/35">Detalhes</p>
+                  <p className="truncate text-base font-semibold text-ink-primary">{selected.title}</p>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto">
+                <div className="mb-5 border-b border-white/5 pb-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="mb-2 text-[28px] leading-none tracking-[-0.04em] text-ink-primary">{selected.title}</h3>
+                      {selected.subtitle ? <p className="text-sm text-[#f7f1e4]/55">{selected.subtitle}</p> : null}
+                    </div>
+                    {selected.badge ? (
+                      <span className="shrink-0 rounded-full bg-brand-500 px-3 py-1.5 text-xs font-medium text-ink-inverted">
+                        {selected.badge}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3">{renderDetail(selected)}</div>
+              </div>
+
+              {(onEdit || onDelete) ? (
+                <div className="mt-5 flex gap-3 border-t border-white/[0.05] pt-4">
+                  {onEdit ? (
+                    <button
+                      onClick={() => onEdit(selected)}
+                      className="h-10 flex-1 rounded-[15px] bg-brand-500 text-sm font-medium text-ink-inverted lg:h-11 lg:rounded-[16px]"
+                    >
+                      Editar
+                    </button>
+                  ) : null}
+                  {onDelete ? (
+                    <button
+                      onClick={() => onDelete(selected)}
+                      className="h-10 flex-1 rounded-[15px] bg-white/6 text-sm text-ink-primary lg:h-11 lg:rounded-[16px]"
+                    >
+                      Arquivar
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   )
 }

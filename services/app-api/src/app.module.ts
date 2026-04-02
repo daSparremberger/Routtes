@@ -16,6 +16,7 @@ import { HistoryModule } from './operational/history/history.module';
 import { TrackingModule } from './operational/tracking/tracking.module';
 import { NotificationsModule } from './communication/notifications/notifications.module';
 import { OutboxModule } from './shared/outbox/outbox.module';
+import { StatsModule } from './operational/stats/stats.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { OutboxModule } from './shared/outbox/outbox.module';
     TrackingModule,
     NotificationsModule,
     OutboxModule,
+    StatsModule,
   ],
 })
 export class AppModule {

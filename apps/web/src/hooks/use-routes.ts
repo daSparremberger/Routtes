@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
+import type { PaginatedResponse } from '@/lib/api'
 
 interface RouteApi {
   id: string
@@ -97,5 +98,24 @@ export function useDeleteRoute() {
   return useMutation({
     mutationFn: (id: string) => api.delete(`/routes/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['routes'] }),
+  })
+}
+
+export function useRoutesList(options?: { shift?: string; enabled?: boolean }) {
+  const { shift, enabled = true } = options ?? {}
+  return useInfiniteQuery<PaginatedResponse<Route>>({
+    queryKey: ['routes-list', shift],
+    queryFn: async ({ pageParam }) => {
+      const page = pageParam as number
+      const params = new URLSearchParams({ page: String(page), limit: '20' })
+      if (shift) params.set('shift', shift)
+      const raw = await api.get<PaginatedResponse<RouteApi>>(
+        `/routes/paginated?${params}`,
+      )
+      return { ...raw, data: raw.data.map(mapRoute) }
+    },
+    getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.page + 1 : undefined,
+    initialPageParam: 1,
+    enabled,
   })
 }

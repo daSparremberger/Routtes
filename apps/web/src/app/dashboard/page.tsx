@@ -21,7 +21,7 @@ export default function DashboardPage() {
   useShellConfig({ title: 'Dashboard' })
   const stats = useDashboardStats()
   const routes = useRoutes()
-  const drivers = useDrivers()
+  const drivers = useDrivers({})
   const vehicles = useVehicles()
   const driverMap = useMemo(
     () => new Map((drivers.data ?? []).map((driver) => [driver.id, driver])),
